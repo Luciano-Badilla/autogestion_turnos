@@ -1,9 +1,17 @@
-// app.js
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import {AppointmentForm} from './views/AppointmentForm'; // Importamos el componente 
+import { InertiaApp } from '@inertiajs/inertia-react';
 
-const rootElement = document.getElementById('root'); // Donde se montará el componente
-const root = createRoot(rootElement);
+const el = document.getElementById('app');
 
-root.render(<AppointmentForm />); // Aquí renderizamos el componente
+if (el) {
+  const initialPage = JSON.parse(el.dataset.page);
+
+  const root = createRoot(el);
+  root.render(
+    <InertiaApp
+      initialPage={initialPage}
+      resolveComponent={(name) => import(`./Pages/${name}`).then((module) => module.default)}
+    />
+  );
+}
