@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class AppointmentForm extends Controller
@@ -23,7 +24,7 @@ class AppointmentForm extends Controller
 
     public function getHealthInsurances()
     {
-        $response = Http::get('http://172.22.116.35/prueba-api/public/api/v1/obrasocial');
+        $response = Http::timeout(60)->get('http://172.22.116.35/prueba-api/public/api/v1/obrasocial');
 
         if ($response->successful()) {
             $json = $response->json();
@@ -49,7 +50,7 @@ class AppointmentForm extends Controller
 
     public function getSpecialties()
 {
-    $response = Http::get('http://172.22.116.35/prueba-api/public/api/v1/especialidades');
+    $response = Http::timeout(60)->get('http://172.22.116.35/prueba-api/public/api/v1/especialidades');
 
     if ($response->successful()) {
         $specialties = $response->json();
@@ -70,7 +71,7 @@ class AppointmentForm extends Controller
     public function getDoctorsBySpeciality($id)
     {
         // Hacer una solicitud a la API externa
-        $response = Http::get('http://172.22.116.35/prueba-api/public/api/v1/profesionales/' . $id);
+        $response = Http::timeout(60)->get('http://172.22.116.35/prueba-api/public/api/v1/profesionales/' . $id);
 
         // Verificar si la respuesta es correcta
         if ($response->successful()) {
@@ -83,7 +84,7 @@ class AppointmentForm extends Controller
 
     public function getDateTimeByDoctor($id, $specialtyId)
     {
-        $response = Http::get('http://172.22.116.35/prueba-api/public/api/v1/turnos/' . $id . '/' . $specialtyId);
+        $response = Http::timeout(60)->get('http://172.22.116.35/prueba-api/public/api/v1/turnos/' . $id . '/' . $specialtyId);
 
         // Verificar si la respuesta es correcta
         if ($response->successful()) {
@@ -96,7 +97,7 @@ class AppointmentForm extends Controller
 
     public function getPersonalInfoByDni($dni)
     {
-        $response = Http::get('http://172.22.116.35/prueba-api/public/api/v1/personas/' . $dni);
+        $response = Http::timeout(60)->get('http://172.22.116.35/prueba-api/public/api/v1/personas/' . $dni);
 
         // Verificar si la respuesta es correcta
         if ($response->successful()) {
@@ -109,6 +110,8 @@ class AppointmentForm extends Controller
 
     public function postTurno(Request $request)
     {
+
+        Log::info($request);
         $validated = $request->validate([
             'hora' => 'required|string',
             'fecha' => 'required|date',
@@ -117,6 +120,7 @@ class AppointmentForm extends Controller
             'persona_id' => 'required|integer',
             'especialidad_id' => 'required|integer',
         ]);
+
 
         $response = Http::post('http://172.22.116.35/prueba-api/public/api/v1/crear/turno', $validated);
 

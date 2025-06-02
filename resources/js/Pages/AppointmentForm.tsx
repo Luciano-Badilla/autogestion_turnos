@@ -8,7 +8,7 @@ import DateTimeStep from "./components/steps/DateTimeStep"
 import PersonalInfoStep from "./components/steps/PersonalInfoStep"
 import { a } from "framer-motion/dist/types.d-CtuPurYT"
 import PatientRegistrationStep from "./components/steps/PatientRegistrationStep"
-import { SummaryStep } from "./components/steps/SummaryStep"
+import SummaryStep from "./components/steps/SummaryStep"
 
 export default function AppointmentForm({ healthInsurances, specialties }) {
   const [step, setStep] = useState(1)
@@ -22,6 +22,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
     date: null,
     time: "",
     planId: null,
+    personId: null,
     documentNumber: "",
     firstName: "",
     lastName: "",
@@ -29,6 +30,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
   })
 
   console.log(appointmentData);
+
 
   const totalSteps = 6
 
@@ -95,15 +97,16 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
 
     switch (step) {
       case 1:
-        return (
-          <HealthInsuranceStep
-            healthInsurances={healthInsurances}
-            data={appointmentData}
-            updateData={updateData}
-            onNext={nextStep}
-            scrollToBottomSmooth={scrollToBottomSmooth}
-          />
-        );
+        nextStep();
+      /*return (
+        <HealthInsuranceStep
+          healthInsurances={healthInsurances}
+          data={appointmentData}
+          updateData={updateData}
+          onNext={nextStep}
+          scrollToBottomSmooth={scrollToBottomSmooth}
+        />
+      );*/
       case 2:
         return (
           <SpecialtyStep

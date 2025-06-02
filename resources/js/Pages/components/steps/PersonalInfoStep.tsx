@@ -9,7 +9,7 @@ import { AlertCircle, FileText, Mail, Phone, Search, User, UserPlus } from "luci
 
 // Función que hace la llamada real a la API Laravel
 const searchPatientByDNI = async (dni: string) => {
-  const response = await fetch(`/api/personalInfo/${dni}`)
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/personalInfo/${dni}`)
   if (!response.ok) {
     throw new Error("Paciente no encontrado")
   }
@@ -80,7 +80,6 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
 
       setNeedsPhone(!telefono)
       setPhoneInput("")
-
       updateData({
         documentNumber: dniInput,
         firstName: patientData.nombres,
@@ -90,14 +89,19 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
           ? patientData.contacto_telefono
           : (patientData.contacto_telefono_2?.trim()
             ? patientData.contacto_telefono_2
-            : "")
+            : ""),
+        healthInsurance: patientData.obra_social,
+        healthInsuranceId: patientData.obra_social_id,
+        planId: patientData.plan_id,
+        personId: patientData.id,
+
       })
 
       setPatientFound(true)
     } catch (error) {
       console.error("Error al buscar paciente:", error)
       setNotFoundError(true)
-      updateData({ firstName: "", lastName: "", email: "", phone: "" })
+      updateData({ firstName: "", lastName: "", email: "", phone: "", healthInsurance: "", healthInsuranceId: "", documentNumber: "", planId: null })
       setPatientFound(false)
     } finally {
       setIsSearching(false)

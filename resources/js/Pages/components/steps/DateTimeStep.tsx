@@ -19,7 +19,7 @@ export default function DateTimeStep({ data, updateData, onNext, onBack, scrollT
 
       setLoading(true)
       try {
-        const response = await axios.get(`/api/dateTime/${data.doctorId}/${data.specialtyId}`)
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/dateTime/${data.doctorId}/${data.specialtyId}`)
 
         const slots = response.data || []
         setSlotsData(slots) // Guardar turnos completos

@@ -20,8 +20,9 @@ export default function DoctorStep({ data, updateData, onNext, onBack, scrollToB
 
       try {
         const response = await axios.get(
-          `/api/doctors/${encodeURIComponent(data.specialtyId)}`
-        )
+          `${import.meta.env.VITE_API_BASE_URL}/api/doctors/${encodeURIComponent(data.specialtyId)}`
+        );
+
         setDoctors(response.data || [])
       } catch (err) {
         console.error("Error fetching doctors:", err)
@@ -69,12 +70,12 @@ export default function DoctorStep({ data, updateData, onNext, onBack, scrollToB
             {doctors.map((doctor) => (
               <div
                 key={doctor.id}
-                className={`relative rounded-xl p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${data.doctor === doctor.nombres+' '+doctor.apellidos
-                    ? "bg-gradient-to-br from-blue-50 to-blue-50 border-2 border-blue-400 shadow-md"
-                    : "bg-white border border-gray-200 hover:border-blue-200"
+                className={`relative rounded-xl p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${data.doctor === doctor.nombres + ' ' + doctor.apellidos
+                  ? "bg-gradient-to-br from-blue-50 to-blue-50 border-2 border-blue-400 shadow-md"
+                  : "bg-white border border-gray-200 hover:border-blue-200"
                   }`}
                 onClick={() => {
-                  updateData({ doctor: doctor.nombres+' '+doctor.apellidos, doctorId: doctor.id, date: null, time: "" });
+                  updateData({ doctor: doctor.nombres + ' ' + doctor.apellidos, doctorId: doctor.id, date: null, time: "" });
                   scrollToBottomSmooth();
                 }}
               >
@@ -83,7 +84,7 @@ export default function DoctorStep({ data, updateData, onNext, onBack, scrollToB
                   <div className="flex items-center text-sm">
                   </div>
                 </div>
-                {data.doctor === doctor.nombres+' '+doctor.apellidos && (
+                {data.doctor === doctor.nombres + ' ' + doctor.apellidos && (
                   <div className="absolute top-2 right-2 w-3 h-3 bg-blue-500 rounded-full"></div>
                 )}
               </div>

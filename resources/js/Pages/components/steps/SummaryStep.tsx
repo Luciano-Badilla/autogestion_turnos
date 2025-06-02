@@ -4,9 +4,11 @@ import type React from "react"
 
 import { useState } from "react"
 import { Button } from "shadcn/components/ui/button"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 import { Check, ClipboardCheck } from "lucide-react"
 
-export function SummaryStep({ data, updateData, onBack }) {
+export default function SummaryStep({ data, updateData, onBack }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState("")
@@ -17,9 +19,28 @@ export function SummaryStep({ data, updateData, onBack }) {
     setIsSubmitting(true)
 
     try {
-      // Aquí iría la lógica para enviar los datos al servidor
-      // Simulamos una petición con un timeout
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/turno/confirmacion`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Incluir si usás cookies para auth (Laravel Sanctum por ejemplo):
+          // "X-Requested-With": "XMLHttpRequest"
+        },
+        body: JSON.stringify({
+          hora: data.time,
+          fecha: format(new Date(data.date), "yyyy-MM-dd"),
+          orden: -1,
+          agenda_id: data.agenda,
+          persona_id: data.personId,
+          especialidad_id: data.specialtyId,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Error del servidor: ${response.statusText}`)
+      }
+
+      const result = await response.json()
       setIsSubmitted(true)
     } catch (error) {
       console.error("Error al enviar el formulario:", error)
@@ -28,6 +49,7 @@ export function SummaryStep({ data, updateData, onBack }) {
       setIsSubmitting(false)
     }
   }
+
 
   if (isSubmitted) {
     return (
@@ -39,7 +61,7 @@ export function SummaryStep({ data, updateData, onBack }) {
           <h2 className="text-3xl font-bold text-gray-800 mb-2">¡Turno confirmado!</h2>
           <p className="text-gray-600 max-w-md mx-auto">
             Hemos enviado los detalles de su turno a <span className="font-medium text-blue-600">{data.email}</span>.
-            También recibirá un recordatorio por SMS al <span className="font-medium text-blue-600">{data.phone}</span>.
+            También recibirá un recordatorio por whatsapp al <span className="font-medium text-blue-600">{data.phone}</span>.
           </p>
         </div>
         <div className="bg-gradient-to-br from-blue-50 to-blue-50 p-8 rounded-2xl max-w-md mx-auto text-left border border-blue-100 shadow-sm">
@@ -78,7 +100,7 @@ export function SummaryStep({ data, updateData, onBack }) {
             </p>
             <p>
               <span className="text-gray-500">Fecha:</span>{" "}
-              <span className="font-medium text-gray-800">{data.date}</span>
+              <span className="font-medium text-gray-800">{format(new Date(data.date), "PPP", { locale: es })}</span>
             </p>
             <p>
               <span className="text-gray-500">Hora:</span>{" "}
@@ -131,7 +153,7 @@ export function SummaryStep({ data, updateData, onBack }) {
           <div className="space-y-1">
             <p className="text-sm text-blue-600">Fecha y Hora</p>
             <p className="font-medium text-gray-800">
-              {data.date} - {data.time}
+              {format(new Date(data.date), "PPP", { locale: es })} - {data.time}
             </p>
           </div>
           <div className="space-y-1">
@@ -162,14 +184,14 @@ export function SummaryStep({ data, updateData, onBack }) {
           type="button"
           variant="outline"
           onClick={onBack}
-          className="border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-5 h-auto rounded-xl"
+          className="border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 h-auto rounded-xl"
         >
           Atrás
         </Button>
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white px-8 py-5 h-auto rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
+          className="bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white px-8 py-3 h-auto rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
         >
           {isSubmitting ? (
             <span className="flex items-center gap-2">
