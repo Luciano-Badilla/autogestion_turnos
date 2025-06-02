@@ -11,7 +11,7 @@ if (el) {
   root.render(
     <InertiaApp
       initialPage={initialPage}
-      resolveComponent={(name) => import(`./Pages/${name}`).then((module) => module.default)}
+      resolveComponent={(name) => import(`./Pages/${name}.tsx`).then((module) => module.default)}
     />
   );
 }
