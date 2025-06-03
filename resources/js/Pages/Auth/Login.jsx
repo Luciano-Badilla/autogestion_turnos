@@ -10,7 +10,6 @@ import { route } from 'ziggy-js'; // Usa default import
 // Si Ziggy no funciona como default, prueba: import { route } from 'ziggy-js';
 
 export default function Login({ status, canResetPassword }) {
-    console.log(window.Ziggy);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
@@ -44,7 +43,7 @@ export default function Login({ status, canResetPassword }) {
                         type="email"
                         name="email"
                         value={data.email}
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-full h-10 border border-gray-300 px-2"
                         autoComplete="username"
                         isFocused={true}
                         onChange={(e) => setData('email', e.target.value)}
@@ -61,7 +60,7 @@ export default function Login({ status, canResetPassword }) {
                         type="password"
                         name="password"
                         value={data.password}
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-full h-10 border border-gray-300 px-2"
                         autoComplete="current-password"
                         onChange={(e) => setData('password', e.target.value)}
                     />
