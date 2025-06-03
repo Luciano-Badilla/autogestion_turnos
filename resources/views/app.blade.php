@@ -7,13 +7,21 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-
+    @routes
+    <style>
+        body {
+            overflow-x: hidden;
+        }
+    </style>
     @viteReactRefresh
     @vite('resources/js/app.jsx')
+
+
 </head>
 
 <body>
     <div id="app" data-page='@json($page)'></div>
 </body>
+
 
 </html>

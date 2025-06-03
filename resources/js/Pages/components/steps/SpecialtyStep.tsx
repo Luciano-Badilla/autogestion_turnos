@@ -55,13 +55,12 @@ export default function SpecialtyStep({ specialties, data, updateData, onNext, o
             {filteredSpecialties.map((specialty) => (
               <div
                 key={specialty.id}
-                className={`relative rounded-xl p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                  data.specialty === specialty.nombre
-                    ? "bg-gradient-to-br from-blue-50 to-blue-50 border-2 border-blue-400 shadow-md"
-                    : "bg-white border border-gray-200 hover:border-blue-200"
-                }`}
+                className={`relative rounded-xl p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${data.specialty === specialty.nombre
+                  ? "bg-gradient-to-br from-blue-50 to-blue-50 border-2 border-blue-400 shadow-md"
+                  : "bg-white border border-gray-200 hover:border-blue-200"
+                  }`}
                 onClick={() => {
-                  updateData({ specialtyId: specialty.id,specialty: specialty.nombre, doctor: "", doctorId: null, date: null, time: "" });
+                  updateData({ specialtyId: specialty.id, specialty: specialty.nombre, doctor: "", doctorId: null, date: null, time: "" });
                   scrollToBottomSmooth();
                 }}
               >
@@ -75,9 +74,10 @@ export default function SpecialtyStep({ specialties, data, updateData, onNext, o
             ))}
           </div>
         ) : (
-          <div className="text-center py-8">
-            <p className="text-amber-600">No hay especialidades disponibles para esta búsqueda.</p>
-            <p className="text-gray-500 mt-2">Probá con otra palabra clave.</p>
+          <div className="text-center">
+            <div className="bg-amber-50 text-amber-800 p-4 rounded-lg">
+              <p>No hay especialidades disponibles para esta búsqueda.</p>
+            </div>
           </div>
         )}
 

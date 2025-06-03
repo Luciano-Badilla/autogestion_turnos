@@ -1,17 +1,19 @@
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-import { InertiaApp } from '@inertiajs/inertia-react';
+import React from 'react'
+import { createRoot } from 'react-dom/client'
+import { createInertiaApp } from '@inertiajs/inertia-react'
 
-const el = document.getElementById('app');
+createInertiaApp({
+  resolve: (name) => {
+    const pages = import.meta.glob('./Pages/**/*.{jsx,tsx}')
+    const page = pages[`./Pages/${name}.jsx`] || pages[`./Pages/${name}.tsx`]
 
-if (el) {
-  const initialPage = JSON.parse(el.dataset.page);
+    if (!page) {
+      throw new Error(`Page not found: ./Pages/${name}.(jsx|tsx)`)
+    }
 
-  const root = createRoot(el);
-  root.render(
-    <InertiaApp
-      initialPage={initialPage}
-      resolveComponent={(name) => import(`./Pages/${name}.tsx`).then((module) => module.default)}
-    />
-  );
-}
+    return page().then((module) => module.default)
+  },
+  setup({ el, App, props }) {
+    createRoot(el).render(<App {...props} />)
+  },
+})

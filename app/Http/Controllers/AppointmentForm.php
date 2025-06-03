@@ -24,7 +24,7 @@ class AppointmentForm extends Controller
 
     public function getHealthInsurances()
     {
-        $response = Http::timeout(60)->get('http://172.22.116.35/prueba-api/public/api/v1/obrasocial');
+        $response = Http::timeout(60)->get('http://172.22.118.101:81/apiturnos/public/api/v1/obrasocial');
 
         if ($response->successful()) {
             $json = $response->json();
@@ -49,29 +49,29 @@ class AppointmentForm extends Controller
 
 
     public function getSpecialties()
-{
-    $response = Http::timeout(60)->get('http://172.22.116.35/prueba-api/public/api/v1/especialidades');
+    {
+        $response = Http::timeout(60)->get('http://172.22.118.101:81/apiturnos/public/api/v1/especialidades');
 
-    if ($response->successful()) {
-        $specialties = $response->json();
+        if ($response->successful()) {
+            $specialties = $response->json();
 
-        // Ordenar alfabéticamente por nombre
-        usort($specialties, function ($a, $b) {
-            return strcmp($a['nombre'], $b['nombre']);
-        });
+            // Ordenar alfabéticamente por nombre
+            usort($specialties, function ($a, $b) {
+                return strcmp($a['nombre'], $b['nombre']);
+            });
 
-        return array_values($specialties);
+            return array_values($specialties);
+        }
+
+        return [];
     }
-
-    return [];
-}
 
 
 
     public function getDoctorsBySpeciality($id)
     {
         // Hacer una solicitud a la API externa
-        $response = Http::timeout(60)->get('http://172.22.116.35/prueba-api/public/api/v1/profesionales/' . $id);
+        $response = Http::timeout(60)->get('http://172.22.118.101:81/apiturnos/public/api/v1/profesionales/' . $id);
 
         // Verificar si la respuesta es correcta
         if ($response->successful()) {
@@ -84,7 +84,7 @@ class AppointmentForm extends Controller
 
     public function getDateTimeByDoctor($id, $specialtyId)
     {
-        $response = Http::timeout(60)->get('http://172.22.116.35/prueba-api/public/api/v1/turnos/' . $id . '/' . $specialtyId);
+        $response = Http::timeout(60)->get('http://172.22.118.101:81/apiturnos/public/api/v1/turnos/' . $id . '/' . $specialtyId);
 
         // Verificar si la respuesta es correcta
         if ($response->successful()) {
@@ -97,7 +97,7 @@ class AppointmentForm extends Controller
 
     public function getPersonalInfoByDni($dni)
     {
-        $response = Http::timeout(60)->get('http://172.22.116.35/prueba-api/public/api/v1/personas/' . $dni);
+        $response = Http::timeout(60)->get('http://172.22.118.101:81/apiturnos/public/api/v1/personas/' . $dni);
 
         // Verificar si la respuesta es correcta
         if ($response->successful()) {
@@ -111,7 +111,6 @@ class AppointmentForm extends Controller
     public function postTurno(Request $request)
     {
 
-        Log::info($request);
         $validated = $request->validate([
             'hora' => 'required|string',
             'fecha' => 'required|date',
@@ -122,7 +121,7 @@ class AppointmentForm extends Controller
         ]);
 
 
-        $response = Http::post('http://172.22.116.35/prueba-api/public/api/v1/crear/turno', $validated);
+        $response = Http::post('http://172.22.118.101:81/apiturnos/public/api/v1/crear/turno', $validated);
 
         if ($response->successful()) {
             return response()->json($response->json(), 200);
@@ -163,7 +162,7 @@ class AppointmentForm extends Controller
     public function getDoctorsBySpeciality($id)
     {
         try {
-            $response = Http::timeout(3)->get('http://172.22.116.35/prueba-api/public/api/v1/profesionales/' . $id);
+            $response = Http::timeout(3)->get('http://172.22.118.101:81/apiturnos/public/api/v1/profesionales/' . $id);
 
             if ($response->successful()) {
                 return $response->json();
@@ -182,7 +181,7 @@ class AppointmentForm extends Controller
     public function getDateTimeByDoctor($id)
     {
         try {
-            $response = Http::timeout(3)->get('http://172.22.116.35/prueba-api/public/api/v1/turnos/' . $id);
+            $response = Http::timeout(3)->get('http://172.22.118.101:81/apiturnos/public/api/v1/turnos/' . $id);
 
             if ($response->successful()) {
                 return $response->json();
