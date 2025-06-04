@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdminConfiguration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -9,16 +10,35 @@ use Inertia\Inertia;
 
 class AppointmentForm extends Controller
 {
+
     public function index()
     {
-        $healthInsurances = $this->getHealthInsurances();
-        $specialties = $this->getSpecialties();
+        // Llamadas a la API externa
+        //$healthInsurances = $this->getHealthInsurances(); // array o colección
+        $specialties = $this->getSpecialties();           // array o colección
+
+        // Configuración habilitada desde la DB
+        $configs = AdminConfiguration::all()->groupBy('type');
+
+        $enabledHealthInsuranceIds = $configs->get('health_insurance')?->pluck('reference_id')->toArray() ?? [];
+        $enabledSpecialtyIds = $configs->get('specialty')?->pluck('reference_id')->toArray() ?? [];
+
+        // Filtrar los datos obtenidos desde la API
+        /*$filteredHealthInsurances = collect($healthInsurances)->filter(function ($item) use ($enabledHealthInsuranceIds) {
+            return in_array($item['id'], $enabledHealthInsuranceIds);
+        })->values();*/
+
+        $filteredSpecialties = collect($specialties)->filter(function ($item) use ($enabledSpecialtyIds) {
+            return in_array($item['id'], $enabledSpecialtyIds);
+        })->values();
+
 
         return Inertia::render('AppointmentForm', [
-            'healthInsurances' => $healthInsurances,
-            'specialties' => $specialties,
+            'specialties' => $filteredSpecialties,
         ]);
     }
+
+
 
 
 

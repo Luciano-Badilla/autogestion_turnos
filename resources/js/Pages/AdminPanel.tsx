@@ -22,7 +22,6 @@ import {
 } from "lucide-react"
 
 export default function AdminPanel({ config }: { config: Record<string, any[]> }) {
-  console.log(config)
   const [healthInsurances, setHealthInsurances] = useState([])
   const [specialties, setSpecialties] = useState([])
   const [openSpecialties, setOpenSpecialties] = useState<number[]>([])
@@ -32,6 +31,15 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
 
   const [searchHealthInsurance, setSearchHealthInsurance] = useState("")
   const [searchSpecialty, setSearchSpecialty] = useState("")
+  const [showOnlyEnabledInsurances, setShowOnlyEnabledInsurances] = useState(false)
+  const [showOnlyEnabledSpecialties, setShowOnlyEnabledSpecialties] = useState(false)
+
+  const sortDoctors = (doctors: any[]) =>
+    [...doctors].sort((a, b) => {
+      const nameA = `${a.apellidos ?? ""} ${a.nombres ?? ""}`.toLowerCase()
+      const nameB = `${b.apellidos ?? ""} ${b.nombres ?? ""}`.toLowerCase()
+      return nameA.localeCompare(nameB)
+    })
 
   useEffect(() => {
     const loadData = async () => {
@@ -61,7 +69,7 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
             ...s,
             enabled: !!match,
             doctors: match
-              ? match.doctors.map(id => ({ id, enabled: true }))
+              ? sortDoctors(match.doctors.map(id => ({ id, enabled: true })))
               : [],
           }
         })
@@ -100,8 +108,10 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
         specialty.id === specialtyId
           ? {
             ...specialty,
-            doctors: specialty.doctors.map(doctor =>
-              doctor.id === doctorId ? { ...doctor, enabled: !doctor.enabled } : doctor
+            doctors: sortDoctors(
+              specialty.doctors.map(doctor =>
+                doctor.id === doctorId ? { ...doctor, enabled: !doctor.enabled } : doctor
+              )
             ),
           }
           : specialty
@@ -124,8 +134,6 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
           const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/doctors/${specialtyId}`)
           const doctors = await res.json()
 
-          console.log("Médicos recibidos:", doctors)
-
           const savedDoctors = config?.doctor?.map(d => Number(d.value)) ?? []
 
           setSpecialties(prev =>
@@ -133,28 +141,24 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
               s.id === specialtyId
                 ? {
                   ...s,
-                  doctors: doctors
-                    .map(d => ({
-                      ...d,
-                      enabled: savedDoctors.includes(d.id),
-                    }))
-                    .sort((a, b) => {
-                      const nameA = `${a.apellidos ?? ""} ${a.nombres ?? ""}`.toLowerCase()
-                      const nameB = `${b.apellidos ?? ""} ${b.nombres ?? ""}`.toLowerCase()
-                      return nameA.localeCompare(nameB)
-                    }),
+                  doctors: sortDoctors(
+                    doctors
+                      .filter(d => d && typeof d === "object" && "apellidos" in d && "nombres" in d)
+                      .map(d => ({
+                        ...d,
+                        enabled: savedDoctors.includes(d.id),
+                      }))
+                  ),
                 }
                 : s
             )
           )
-
         } catch (err) {
           console.error("Error cargando médicos:", err)
         } finally {
           setLoadingDoctors(prev => prev.filter(id => id !== specialtyId))
         }
       }
-
     }
   }
 
@@ -191,14 +195,13 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
   const normalizeText = (text: string) =>
     text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
 
-  const filteredHealthInsurances = healthInsurances.filter(i =>
-    normalizeText(i.nombre).includes(normalizeText(searchHealthInsurance))
-  )
+  const filteredHealthInsurances = healthInsurances
+    .filter(i => normalizeText(i.nombre).includes(normalizeText(searchHealthInsurance)))
+    .filter(i => (showOnlyEnabledInsurances ? i.enabled : true))
 
-  const filteredSpecialties = specialties.filter(s =>
-    normalizeText(s.nombre).includes(normalizeText(searchSpecialty))
-  )
-
+  const filteredSpecialties = specialties
+    .filter(s => normalizeText(s.nombre).includes(normalizeText(searchSpecialty)))
+    .filter(s => (showOnlyEnabledSpecialties ? s.enabled : true))
 
   if (isLoading) {
     return (
@@ -221,15 +224,25 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
           {/* Obras Sociales */}
           <Card className="shadow-lg border-blue-100 flex flex-col h-[75vh]">
             <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-50">
-              <CardTitle className="flex items-center gap-2 text-blue-800">
-                <Shield className="w-6 h-6" /> Obras Sociales
-              </CardTitle>
-              <CardDescription>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-blue-800">
+                  <Shield className="w-6 h-6" /> Obras Sociales
+                </CardTitle>
+                <div className="mt-2 flex items-center gap-2">
+                  <Switch
+                    checked={showOnlyEnabledInsurances}
+                    onCheckedChange={setShowOnlyEnabledInsurances}
+                  />
+                  <span className="text-sm font-semibold text-gray-700">Mostrar solo activas</span>
+                </div>
+              </div>
+              <CardDescription className="font-semibold">
                 Seleccione las obras sociales disponibles, cuando un paciente nuevo se registre.
               </CardDescription>
               <Badge variant="secondary" className="w-fit bg-gray-200">
                 {getEnabledCount(healthInsurances)} de {healthInsurances.length} activas
               </Badge>
+
             </CardHeader>
             <div className="px-6 pt-4">
               <input
@@ -245,7 +258,7 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
                 filteredHealthInsurances.map(insurance => (
                   <div
                     key={insurance.id}
-                    className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:bg-gray-50"
+                    className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:bg-gray-200"
                   >
                     <span className="font-medium text-gray-800">{insurance.nombre}</span>
                     <Switch
@@ -255,7 +268,7 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
                   </div>
                 ))
               ) : (
-                <div className="text-center text-gray-500 py-4">No se encontraron obras sociales.</div>
+                <p className="text-center text-gray-400">No se encontraron obras sociales.</p>
               )}
             </CardContent>
           </Card>
@@ -263,17 +276,26 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
           {/* Especialidades */}
           <Card className="shadow-lg border-blue-100 flex flex-col h-[75vh]">
             <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-50">
-              <CardTitle className="flex items-center gap-2 text-blue-800">
-                <Stethoscope className="w-6 h-6" /> Especialidades y Médicos
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-blue-800">
+                  <Stethoscope className="w-6 h-6" /> Especialidades
+                </CardTitle>
+                <div className="mt-2 flex items-center gap-2">
+                  <Switch
+                    checked={showOnlyEnabledSpecialties}
+                    onCheckedChange={setShowOnlyEnabledSpecialties}
+                  />
+                  <span className="text-sm font-semibold text-gray-700">Mostrar solo activas</span>
+                </div>
+              </div>
               <CardDescription>
-                Configure especialidades y médicos habilitados
+                Seleccione las especialidades médicas y médicos habilitados.
               </CardDescription>
               <Badge variant="secondary" className="w-fit bg-gray-200">
                 {getEnabledCount(specialties)} de {specialties.length} activas
               </Badge>
-            </CardHeader>
 
+            </CardHeader>
             <div className="px-6 pt-4">
               <input
                 type="text"
@@ -283,89 +305,82 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
                 onChange={e => setSearchSpecialty(e.target.value)}
               />
             </div>
-
             <CardContent className="p-6 space-y-4 overflow-auto">
               {filteredSpecialties.length > 0 ? (
                 filteredSpecialties.map(specialty => (
-                  <div
-                    key={specialty.id}
-                    className="border border-gray-200 rounded-lg overflow-hidden"
-                  >
-                    <div className="flex items-center justify-between p-4 hover:bg-gray-50">
-                      <div className="flex items-center gap-3">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="p-0 h-auto"
-                          onClick={() => toggleSpecialtyCollapse(specialty.id)}
-                        >
-                          {openSpecialties.includes(specialty.id) ? (
-                            <ChevronDown className="w-4 h-4" />
-                          ) : (
-                            <ChevronRight className="w-4 h-4" />
-                          )}
-                        </Button>
-                        <div>
-                          <span className="font-medium text-gray-800">{specialty.nombre}</span>
-                        </div>
+                  <div key={specialty.id} className="border border-gray-200 rounded-md">
+                    <button
+                      className="w-full flex items-center justify-between p-3 hover:bg-gray-200 rounded-t-md"
+                      onClick={() => toggleSpecialtyCollapse(specialty.id)}
+                    >
+                      <div className="flex items-center gap-2">
+                        {openSpecialties.includes(specialty.id) ? (
+                          <ChevronDown className="w-5 h-5" />
+                        ) : (
+                          <ChevronRight className="w-5 h-5" />
+                        )}
+                        <span className="font-semibold text-gray-800">{specialty.nombre}</span>
                       </div>
                       <Switch
                         checked={specialty.enabled}
                         onCheckedChange={() => toggleSpecialty(specialty.id)}
+                        onClick={e => e.stopPropagation()}
                       />
-                    </div>
+                    </button>
 
                     {openSpecialties.includes(specialty.id) && (
-                      <div className="px-4 pb-4">
-                        <div className="ml-8 space-y-2 border-l-2 border-gray-100 pl-4">
-                          {loadingDoctors.includes(specialty.id) ? (
-                            <div className="flex justify-center py-4">
-                              <Loader2 className="animate-spin w-5 h-5 text-blue-500" />
-                            </div>
-                          ) : specialty.doctors.length > 0 ? (
-                            specialty.doctors.map(doctor => (
-                              <div
-                                key={doctor.id}
-                                className="flex items-center justify-between p-3 rounded-md bg-gray-50 hover:bg-gray-100"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <UserRound className="w-4 h-4 text-gray-500" />
-                                  <span className="font-medium text-gray-800">
-                                    {doctor.nombres ?? ""} {doctor.apellidos ?? ""}
-                                  </span>
-                                </div>
-                                <Switch
-                                  checked={doctor.enabled}
-                                  disabled={!specialty.enabled}
-                                  onCheckedChange={() => toggleDoctor(specialty.id, doctor.id)}
-                                />
-
+                      <div className="p-3 space-y-2 border-t border-gray-300 overflow-auto">
+                        {loadingDoctors.includes(specialty.id) ? (
+                          <div className="flex items-center justify-center p-4">
+                            <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                            <span className="ml-2 text-blue-600">Cargando médicos...</span>
+                          </div>
+                        ) : specialty.doctors.length > 0 ? (
+                          specialty.doctors.map(doctor => (
+                            <div
+                              key={doctor.id}
+                              className="flex items-center justify-between p-2 border border-gray-200 rounded-md hover:bg-gray-50"
+                            >
+                              <div className="flex items-center gap-2">
+                                <UserRound className="w-5 h-5 text-gray-500" />
+                                <span>{`${doctor.apellidos ?? ""} ${doctor.nombres ?? ""}`}</span>
                               </div>
-                            ))
-                          ) : (
-                            <div className="text-center text-gray-500 py-4">
-                              No hay médicos para esta especialidad.
+                              <Switch
+                                checked={doctor.enabled}
+                                onCheckedChange={() => toggleDoctor(specialty.id, doctor.id)}
+                              />
                             </div>
-                          )}
-                        </div>
+                          ))
+                        ) : (
+                          <p className="text-center text-gray-400">
+                            No hay médicos para esta especialidad.
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
                 ))
               ) : (
-                <div className="text-center text-gray-500 py-4">No se encontraron especialidades.</div>
+                <p className="text-center text-gray-400">No se encontraron especialidades.</p>
               )}
             </CardContent>
           </Card>
         </div>
 
-        <div className="mt-8 text-center">
+        <div className="mt-8 flex justify-center">
           <Button
-            disabled={isSaving}
-            onClick={handleSave}
             className="bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white px-8 py-3 h-auto rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
+            onClick={handleSave}
+            disabled={isSaving}
           >
-            {isSaving ? "Guardando..." : "Guardar configuración"}
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Guardando...
+              </>
+            ) : (
+              "Guardar Configuración"
+            )}
           </Button>
         </div>
       </div>

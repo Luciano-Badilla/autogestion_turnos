@@ -22,15 +22,26 @@ export default function DoctorStep({ data, updateData, onNext, onBack, scrollToB
       setError("")
 
       try {
-        // Traigo los doctores para la especialidad
+        // 1. Traer IDs habilitados
+        const enabledDoctorsRes = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/api/enabled-doctors`
+        )
+        const enabledDoctorIds: string[] = enabledDoctorsRes.data || []
+
+        // 2. Traer todos los doctores para esa especialidad
         const response = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/api/doctors/${encodeURIComponent(data.specialtyId)}`
         )
-        const doctorsList = response.data || []
+        const allDoctors = response.data || []
 
-        // Por cada doctor, traigo sus turnos y cuento
+        // 3. Filtrar por los habilitados
+        const filteredDoctors = allDoctors.filter((doc: { id: string }) =>
+          enabledDoctorIds.includes(doc.id)
+        )
+
+        // 4. Traer turnos para cada doctor
         const doctorsWithTurnos = await Promise.all(
-          doctorsList.map(async (doc: { id: string }) => {
+          filteredDoctors.map(async (doc: { id: string }) => {
             try {
               const turnosResponse = await axios.get(
                 `${import.meta.env.VITE_API_BASE_URL}/api/dateTime/${doc.id}/${data.specialtyId}`
@@ -43,19 +54,16 @@ export default function DoctorStep({ data, updateData, onNext, onBack, scrollToB
           })
         )
 
-        // Ordenar: primero los habilitados (con turnos), luego por apellido y nombre
+        // 5. Ordenar por disponibilidad, apellido y nombre
         doctorsWithTurnos.sort((a, b) => {
-          // Primero por disponibilidad (los que tienen turnos primero)
           if (a.turnosDisponibles > 0 && b.turnosDisponibles === 0) return -1
           if (a.turnosDisponibles === 0 && b.turnosDisponibles > 0) return 1
 
-          // Luego por apellido alfabéticamente
           const lastNameA = a.apellidos.toLowerCase()
           const lastNameB = b.apellidos.toLowerCase()
           if (lastNameA < lastNameB) return -1
           if (lastNameA > lastNameB) return 1
 
-          // Y finalmente por nombre alfabéticamente
           const firstNameA = a.nombres.toLowerCase()
           const firstNameB = b.nombres.toLowerCase()
           if (firstNameA < firstNameB) return -1
@@ -63,7 +71,6 @@ export default function DoctorStep({ data, updateData, onNext, onBack, scrollToB
 
           return 0
         })
-
 
         setDoctors(doctorsWithTurnos)
       } catch (err) {
@@ -77,6 +84,7 @@ export default function DoctorStep({ data, updateData, onNext, onBack, scrollToB
 
     fetchDoctorsWithTurnos()
   }, [data.specialtyId])
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -117,8 +125,8 @@ export default function DoctorStep({ data, updateData, onNext, onBack, scrollToB
                 <div
                   key={doctor.id}
                   className={`relative rounded-xl p-4 cursor-pointer transition-all duration-200 ${isSelected
-                      ? "bg-gradient-to-br from-blue-50 to-blue-50 border-2 border-blue-400 shadow-md"
-                      : "bg-white border border-gray-200 hover:border-blue-200"
+                    ? "bg-gradient-to-br from-blue-50 to-blue-50 border-2 border-blue-400 shadow-md"
+                    : "bg-white border border-gray-200 hover:border-blue-200"
                     } ${disabled ? "opacity-50 cursor-not-allowed" : "hover:shadow-md"}`}
                   onClick={() => {
                     if (disabled) return

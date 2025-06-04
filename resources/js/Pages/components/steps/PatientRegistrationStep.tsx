@@ -2,26 +2,13 @@
 
 import type React from "react"
 
-import { useState } from "react"
 import { Button } from "shadcn/components/ui/button"
 import { Input } from "shadcn/components/ui/input"
 import { Label } from "shadcn/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "shadcn/components/ui/select"
 import { UserPlus } from "lucide-react"
-
-// Lista de obras sociales disponibles
-const healthInsurances = [
-  "OSDE",
-  "Swiss Medical",
-  "Galeno",
-  "Medifé",
-  "OMINT",
-  "Accord Salud",
-  "Sancor Salud",
-  "PAMI",
-  "IOMA",
-  "Particular (Sin obra social)",
-]
+import { useEffect, useState } from "react"
+import axios from 'axios';
 
 // Generar arrays para los selectores de fecha
 const currentYear = new Date().getFullYear()
@@ -64,6 +51,9 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
   const [birthMonth, setBirthMonth] = useState<string>("")
   const [birthYear, setBirthYear] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [healthInsurances, setHealthInsurances] = useState([]);
+  const [enabledIds, setEnabledIds] = useState([]);
+  const [filteredHealthInsurances, setFilteredHealthInsurances] = useState([]);
 
   // Función para actualizar la fecha completa cuando cambia algún componente
   const updateBirthDate = (day: string, month: string, year: string) => {
@@ -179,9 +169,63 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
     }
   }
 
+  useEffect(() => {
+    // Obtener ambas listas
+    const fetchData = async () => {
+      try {
+        const [allResponse, enabledResponse] = await Promise.all([
+          axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/healthinsurances`),
+          axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/enabled-healthinsurances`)
+        ]);
+
+        const all = allResponse.data;
+        const enabled = enabledResponse.data;
+
+
+        setHealthInsurances(all);
+        setEnabledIds(enabled);
+
+        // Filtrar las habilitadas
+        const filtered = all.filter(h => enabled.includes(h.id));
+        setFilteredHealthInsurances(filtered);
+
+      } catch (error) {
+        console.error('Error cargando datos:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Preseleccionar fecha de nacimiento si ya está cargada
+  useEffect(() => {
+    if (data.birthDate instanceof Date && !isNaN(data.birthDate)) {
+      const date = data.birthDate
+      const day = date.getDate().toString()
+      const month = (date.getMonth() + 1).toString()
+      const year = date.getFullYear().toString()
+
+      setBirthDay(day)
+      setBirthMonth(month)
+      setBirthYear(year)
+    } else if (typeof data.birthDate === "string") {
+      const date = new Date(data.birthDate)
+      if (!isNaN(date.getTime())) {
+        const day = date.getDate().toString()
+        const month = (date.getMonth() + 1).toString()
+        const year = date.getFullYear().toString()
+
+        setBirthDay(day)
+        setBirthMonth(month)
+        setBirthYear(year)
+      }
+    }
+  }, [data.birthDate])
+
+
   // Obtener días disponibles para el mes y año seleccionados
   const availableDays =
-    birthMonth && birthYear ? getDaysInMonth(Number.parseInt(birthMonth), Number.parseInt(birthYear)) : [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]
+    birthMonth && birthYear ? getDaysInMonth(Number.parseInt(birthMonth), Number.parseInt(birthYear)) : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
@@ -199,7 +243,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="firstName" className="text-gray-700">
-              Nombre <span class="text-red-500"><span class="text-red-500">*</span></span>
+              Nombre <span className="text-red-500"><span className="text-red-500">*</span></span>
             </Label>
             <Input
               id="firstName"
@@ -213,7 +257,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
 
           <div className="space-y-2">
             <Label htmlFor="lastName" className="text-gray-700">
-              Apellido <span class="text-red-500">*</span>
+              Apellido <span className="text-red-500">*</span>
             </Label>
             <Input
               id="lastName"
@@ -227,7 +271,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
 
           <div className="space-y-2">
             <Label htmlFor="documentNumber" className="text-gray-700">
-              Número de Documento (DNI) <span class="text-red-500">*</span>
+              Número de Documento (DNI) <span className="text-red-500">*</span>
             </Label>
             <Input
               id="documentNumber"
@@ -241,7 +285,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
           </div>
 
           <div className="space-y-2">
-            <Label className="text-gray-700">Sexo <span class="text-red-500">*</span></Label>
+            <Label className="text-gray-700">Sexo <span className="text-red-500">*</span></Label>
             <Select value={data.gender} onValueChange={(value) => updateData({ gender: value })}>
               <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                 <SelectValue placeholder="Seleccione el sexo" />
@@ -256,14 +300,14 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
           </div>
 
           <div className="space-y-2 md:col-span-2">
-            <Label className="text-gray-700">Fecha de Nacimiento <span class="text-red-500">*</span></Label>
+            <Label className="text-gray-700">Fecha de Nacimiento <span className="text-red-500">*</span></Label>
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <Select value={birthDay} onValueChange={handleDayChange}>
                   <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                     <SelectValue placeholder="Día" />
                   </SelectTrigger>
-                  <SelectContent class="max-h-48 mt-1 relative z-50 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-select-content-transform-origin]">
+                  <SelectContent className="max-h-48 mt-1 relative z-50 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-select-content-transform-origin]">
                     {availableDays.map((day) => (
                       <SelectItem key={day} value={day.toString()}>
                         {day}
@@ -277,7 +321,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
                   <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                     <SelectValue placeholder="Mes" />
                   </SelectTrigger>
-                  <SelectContent class="max-h-48 mt-1 relative z-50 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-select-content-transform-origin]">
+                  <SelectContent className="max-h-48 mt-1 relative z-50 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-select-content-transform-origin]">
                     {months.map((month) => (
                       <SelectItem key={month.value} value={month.value.toString()}>
                         {month.label}
@@ -306,7 +350,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
 
           <div className="space-y-2">
             <Label htmlFor="phone" className="text-gray-700">
-              Celular <span class="text-red-500">*</span>
+              Celular <span className="text-red-500">*</span>
             </Label>
             <Input
               id="phone"
@@ -321,7 +365,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
 
           <div className="space-y-2">
             <Label htmlFor="email" className="text-gray-700">
-              Email <span class="text-red-500">*</span>
+              Email <span className="text-red-500">*</span>
             </Label>
             <Input
               id="email"
@@ -335,21 +379,36 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
           </div>
 
           <div className="space-y-2 md:col-span-2">
-            <Label className="text-gray-700">Obra Social <span class="text-red-500">*</span></Label>
-            <Select value={data.healthInsurance} onValueChange={(value) => updateData({ healthInsurance: value })}>
+            <Label className="text-gray-700">
+              Obra Social <span className="text-red-500">*</span>
+            </Label>
+            <Select
+              value={data.healthInsurance?.id?.toString() || ''}
+              onValueChange={(value) => {
+                const selected = filteredHealthInsurances.find(
+                  (insurance) => insurance.id.toString() === value
+                );
+                if (selected) {
+                  updateData({ healthInsuranceId: selected.id, healthInsurance: selected.nombre });
+                }
+              }}
+            >
               <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                <SelectValue placeholder="Seleccione su obra social" />
+                <SelectValue placeholder="Seleccione una obra social" />
               </SelectTrigger>
               <SelectContent>
-                {healthInsurances.map((insurance) => (
-                  <SelectItem key={insurance} value={insurance}>
-                    {insurance}
+                {filteredHealthInsurances.map((insurance) => (
+                  <SelectItem key={insurance.id} value={insurance.id.toString()}>
+                    {insurance.nombre}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {errors.healthInsurance && <p className="text-rose-500 text-sm">{errors.healthInsurance}</p>}
+            {errors.healthInsurance && (
+              <p className="text-rose-500 text-sm">{errors.healthInsurance}</p>
+            )}
           </div>
+
         </div>
 
         <div className="mt-6 bg-blue-50 border border-blue-100 rounded-lg p-4 text-blue-800 text-sm">

@@ -29,6 +29,7 @@ export default function Login({ status, canResetPassword }) {
     };
 
     return (
+        
         <GuestLayout>
             <Head title="Iniciar sesión" />
 
@@ -80,14 +81,7 @@ export default function Login({ status, canResetPassword }) {
                 </div>
 
                 <div className="flex items-center justify-end mt-4">
-                    {canResetPassword && (
-                        <Link
-                            href={route('password.request')}
-                            className="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                            ¿Olvidaste tu contraseña?
-                        </Link>
-                    )}
+                    
 
                     <PrimaryButton className="ms-4" disabled={processing}>
                         Iniciar sesión

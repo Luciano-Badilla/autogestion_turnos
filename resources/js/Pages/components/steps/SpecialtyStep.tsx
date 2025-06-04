@@ -84,14 +84,8 @@ export default function SpecialtyStep({ specialties, data, updateData, onNext, o
         {error && <p className="text-rose-500 text-sm mt-4">{error}</p>}
       </div>
 
-      <div className="flex justify-between">
-        <button
-          type="button"
-          onClick={onBack}
-          className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 h-auto rounded-xl"
-        >
-          Atrás
-        </button>
+      <div className="flex justify-end">
+
         <button
           type="submit"
           className="bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white px-8 py-3 h-auto rounded-xl shadow-md hover:shadow-lg transition-all duration-200"

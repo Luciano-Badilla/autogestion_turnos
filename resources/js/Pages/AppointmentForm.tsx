@@ -9,6 +9,7 @@ import PersonalInfoStep from "./components/steps/PersonalInfoStep"
 import { a } from "framer-motion/dist/types.d-CtuPurYT"
 import PatientRegistrationStep from "./components/steps/PatientRegistrationStep"
 import SummaryStep from "./components/steps/SummaryStep"
+import { LandingPage } from "./components/steps/LandingPage"
 
 export default function AppointmentForm({ healthInsurances, specialties }) {
   const [step, setStep] = useState(1)
@@ -31,8 +32,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
 
   console.log(appointmentData);
 
-
-  const totalSteps = 6
+  const totalSteps = 7
 
   const updateData = (data) => {
     setAppointmentData((prev) => ({ ...prev, ...data }))
@@ -97,6 +97,8 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
 
     switch (step) {
       case 1:
+        return (<LandingPage onAccessGranted={nextStep} />);
+      case 2:
         nextStep();
       /*return (
         <HealthInsuranceStep
@@ -107,7 +109,8 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
           scrollToBottomSmooth={scrollToBottomSmooth}
         />
       );*/
-      case 2:
+
+      case 3:
         return (
           <SpecialtyStep
             specialties={specialties}
@@ -118,7 +121,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
             scrollToBottomSmooth={scrollToBottomSmooth}
           />
         );
-      case 3:
+      case 4:
         return (
           <DoctorStep
             data={appointmentData}
@@ -129,7 +132,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
 
           />
         );
-      case 4:
+      case 5:
         return (
           <DateTimeStep
             data={appointmentData}
@@ -139,7 +142,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
             scrollToBottomSmooth={scrollToBottomSmooth}
           />
         );
-      case 5:
+      case 6:
         return (
           <PersonalInfoStep
             data={appointmentData}
@@ -151,12 +154,13 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
           />
         );
 
-      case 6:
+      case 7:
         return (
           <SummaryStep
             data={appointmentData}
             updateData={updateData}
             onBack={prevStep}
+            setStep={setStep}
           />
         );
       default:

@@ -6,9 +6,9 @@ import { useState } from "react"
 import { Button } from "shadcn/components/ui/button"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { Check, ClipboardCheck } from "lucide-react"
+import { Check, ClipboardCheck, CalendarSync } from "lucide-react"
 
-export default function SummaryStep({ data, updateData, onBack }) {
+export default function SummaryStep({ data, updateData, onBack, setStep }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState("")
@@ -19,12 +19,35 @@ export default function SummaryStep({ data, updateData, onBack }) {
     setIsSubmitting(true)
 
     try {
+      // 1. Verificar si el turno aún está disponible
+      const availabilityResponse = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/dateTime/${data.doctorId}/${data.specialtyId}`
+      )
+
+      if (!availabilityResponse.ok) {
+        throw new Error("No se pudo verificar la disponibilidad del turno.")
+      }
+
+      const availableSlots = await availabilityResponse.json()
+
+      const isStillAvailable = availableSlots.some(
+        (slot: any) =>
+          slot.hora === data.time &&
+          slot.fecha === format(new Date(data.date), "yyyy-MM-dd") &&
+          slot.agenda === data.agenda
+      )
+
+      if (!isStillAvailable) {
+        setError("El turno seleccionado ya no está disponible. Por favor, elija otro.")
+        setIsSubmitting(false)
+        return
+      }
+
+      // 2. Si el turno sigue disponible, hacer el POST de confirmación
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/turno/confirmacion`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Incluir si usás cookies para auth (Laravel Sanctum por ejemplo):
-          // "X-Requested-With": "XMLHttpRequest"
         },
         body: JSON.stringify({
           hora: data.time,
@@ -44,11 +67,12 @@ export default function SummaryStep({ data, updateData, onBack }) {
       setIsSubmitted(true)
     } catch (error) {
       console.error("Error al enviar el formulario:", error)
-      setError("Ocurrió un error al procesar su solicitud. Por favor intente nuevamente.")
+      setError("El turno seleccionado ya no está disponible. Por favor, elija otro.")
     } finally {
       setIsSubmitting(false)
     }
   }
+
 
 
   if (isSubmitted) {
@@ -177,7 +201,20 @@ export default function SummaryStep({ data, updateData, onBack }) {
         </div>
       </div>
 
-      {error && <div className="bg-rose-50 text-rose-500 p-4 rounded-lg border border-rose-200">{error}</div>}
+      {error && (
+        <div className="bg-rose-50 text-rose-500 p-4 rounded-lg border border-rose-200 space-y-2">
+          <div>{error}</div>
+          {error === "El turno seleccionado ya no está disponible. Por favor, elija otro." && (
+            <button
+              onClick={() => setStep(4)}
+
+              className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition flex flex-row items-center space-x-2 gap-2"
+            ><CalendarSync />
+              Seleccionar otra fecha/hora.
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="flex justify-between">
         <Button
