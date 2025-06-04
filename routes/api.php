@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminConfigurationController;
 use App\Http\Controllers\AdminPanel;
 use App\Http\Controllers\AppointmentForm;
 use Illuminate\Http\Request;
@@ -23,10 +24,9 @@ Route::get('/dateTime/{id?}/{specialtyId?}', [AppointmentForm::class, 'getDateTi
 Route::get('/personalInfo/{dni}', [AppointmentForm::class, 'getPersonalInfoByDni'])->name('getPersonalInfoByDni');
 Route::post('/turno/confirmacion', [AppointmentForm::class, 'postTurno'])->name('postTurno');
 
+Route::post('/admin/sync/save', [AdminConfigurationController::class, 'store']);
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    Route::prefix('admin/sync')->group(function () {
-        Route::post('/save', [AdminPanel::class, 'saveToggles']);
-    });
+    Route::get('/admin/sync/load', [AdminConfigurationController::class, 'index']);
 
     return $request->user();
 });

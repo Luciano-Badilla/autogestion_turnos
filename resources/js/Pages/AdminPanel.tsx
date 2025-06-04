@@ -18,12 +18,15 @@ import {
   Stethoscope,
   UserRound,
   UserCog,
+  Loader2,
 } from "lucide-react"
 
-export default function AdminPanel() {
+export default function AdminPanel({ config }: { config: Record<string, any[]> }) {
+  console.log(config)
   const [healthInsurances, setHealthInsurances] = useState([])
   const [specialties, setSpecialties] = useState([])
   const [openSpecialties, setOpenSpecialties] = useState<number[]>([])
+  const [loadingDoctors, setLoadingDoctors] = useState<number[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -38,12 +41,33 @@ export default function AdminPanel() {
           fetch(`${import.meta.env.VITE_API_BASE_URL}/api/healthinsurances`),
           fetch(`${import.meta.env.VITE_API_BASE_URL}/api/specialties`),
         ])
-
         const healthInsurancesData = await insurancesRes.json()
         const specialtiesData = await specialtiesRes.json()
 
-        setHealthInsurances(healthInsurancesData.map(i => ({ ...i, enabled: false })))
-        setSpecialties(specialtiesData.map(s => ({ ...s, enabled: false, doctors: [] })))
+        const enabledInsuranceIds = config?.health_insurance?.map(i => i.value) || []
+        const enabledSpecialties = config?.specialty?.map(s => ({
+          id: s.value,
+          doctors: s.meta?.doctors || [],
+        })) || []
+
+        const updatedInsurances = healthInsurancesData.map(i => ({
+          ...i,
+          enabled: enabledInsuranceIds.includes(i.id),
+        }))
+
+        const updatedSpecialties = specialtiesData.map(s => {
+          const match = enabledSpecialties.find(es => es.id === s.id)
+          return {
+            ...s,
+            enabled: !!match,
+            doctors: match
+              ? match.doctors.map(id => ({ id, enabled: true }))
+              : [],
+          }
+        })
+
+        setHealthInsurances(updatedInsurances)
+        setSpecialties(updatedSpecialties)
       } catch (error) {
         console.error("Error al cargar los datos:", error)
       } finally {
@@ -75,11 +99,11 @@ export default function AdminPanel() {
       prev.map(specialty =>
         specialty.id === specialtyId
           ? {
-              ...specialty,
-              doctors: specialty.doctors.map(doctor =>
-                doctor.id === doctorId ? { ...doctor, enabled: !doctor.enabled } : doctor
-              ),
-            }
+            ...specialty,
+            doctors: specialty.doctors.map(doctor =>
+              doctor.id === doctorId ? { ...doctor, enabled: !doctor.enabled } : doctor
+            ),
+          }
           : specialty
       )
     )
@@ -95,23 +119,42 @@ export default function AdminPanel() {
     if (!alreadyOpen) {
       const specialty = specialties.find(s => s.id === specialtyId)
       if (specialty && specialty.doctors.length === 0) {
+        setLoadingDoctors(prev => [...prev, specialtyId])
         try {
           const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/doctors/${specialtyId}`)
           const doctors = await res.json()
+
+          console.log("Médicos recibidos:", doctors)
+
+          const savedDoctors = config?.doctor?.map(d => Number(d.value)) ?? []
+
           setSpecialties(prev =>
             prev.map(s =>
               s.id === specialtyId
                 ? {
-                    ...s,
-                    doctors: doctors.map(d => ({ ...d, enabled: false })),
-                  }
+                  ...s,
+                  doctors: doctors
+                    .map(d => ({
+                      ...d,
+                      enabled: savedDoctors.includes(d.id),
+                    }))
+                    .sort((a, b) => {
+                      const nameA = `${a.apellidos ?? ""} ${a.nombres ?? ""}`.toLowerCase()
+                      const nameB = `${b.apellidos ?? ""} ${b.nombres ?? ""}`.toLowerCase()
+                      return nameA.localeCompare(nameB)
+                    }),
+                }
                 : s
             )
           )
+
         } catch (err) {
           console.error("Error cargando médicos:", err)
+        } finally {
+          setLoadingDoctors(prev => prev.filter(id => id !== specialtyId))
         }
       }
+
     }
   }
 
@@ -126,7 +169,7 @@ export default function AdminPanel() {
           doctors: s.doctors.filter(d => d.enabled).map(d => d.id),
         }))
 
-      await fetch("/api/admin/sync/save", {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/sync/save`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -145,12 +188,8 @@ export default function AdminPanel() {
 
   const getEnabledCount = (items: { enabled: boolean }[]) => items.filter(i => i.enabled).length
 
-  // Normaliza texto para búsqueda sin acentos ni mayúsculas
   const normalizeText = (text: string) =>
-    text
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
+    text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
 
   const filteredHealthInsurances = healthInsurances.filter(i =>
     normalizeText(i.nombre).includes(normalizeText(searchHealthInsurance))
@@ -159,6 +198,7 @@ export default function AdminPanel() {
   const filteredSpecialties = specialties.filter(s =>
     normalizeText(s.nombre).includes(normalizeText(searchSpecialty))
   )
+
 
   if (isLoading) {
     return (
@@ -177,15 +217,15 @@ export default function AdminPanel() {
           </h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[75vh]">
           {/* Obras Sociales */}
-          <Card className="shadow-lg border-blue-100">
+          <Card className="shadow-lg border-blue-100 flex flex-col h-[75vh]">
             <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-50">
               <CardTitle className="flex items-center gap-2 text-blue-800">
                 <Shield className="w-6 h-6" /> Obras Sociales
               </CardTitle>
               <CardDescription>
-                Seleccione las obras sociales que estarán disponibles
+                Seleccione las obras sociales disponibles, cuando un paciente nuevo se registre.
               </CardDescription>
               <Badge variant="secondary" className="w-fit bg-gray-200">
                 {getEnabledCount(healthInsurances)} de {healthInsurances.length} activas
@@ -200,7 +240,7 @@ export default function AdminPanel() {
                 onChange={e => setSearchHealthInsurance(e.target.value)}
               />
             </div>
-            <CardContent className="p-6 space-y-4 max-h-[400px] overflow-auto">
+            <CardContent className="p-6 space-y-4 overflow-auto">
               {filteredHealthInsurances.length > 0 ? (
                 filteredHealthInsurances.map(insurance => (
                   <div
@@ -221,7 +261,7 @@ export default function AdminPanel() {
           </Card>
 
           {/* Especialidades */}
-          <Card className="shadow-lg border-blue-100">
+          <Card className="shadow-lg border-blue-100 flex flex-col h-[75vh]">
             <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-50">
               <CardTitle className="flex items-center gap-2 text-blue-800">
                 <Stethoscope className="w-6 h-6" /> Especialidades y Médicos
@@ -230,7 +270,7 @@ export default function AdminPanel() {
                 Configure especialidades y médicos habilitados
               </CardDescription>
               <Badge variant="secondary" className="w-fit bg-gray-200">
-                {getEnabledCount(specialties)} activas
+                {getEnabledCount(specialties)} de {specialties.length} activas
               </Badge>
             </CardHeader>
 
@@ -244,7 +284,7 @@ export default function AdminPanel() {
               />
             </div>
 
-            <CardContent className="p-6 space-y-4 max-h-[400px] overflow-auto">
+            <CardContent className="p-6 space-y-4 overflow-auto">
               {filteredSpecialties.length > 0 ? (
                 filteredSpecialties.map(specialty => (
                   <div
@@ -267,9 +307,6 @@ export default function AdminPanel() {
                         </Button>
                         <div>
                           <span className="font-medium text-gray-800">{specialty.nombre}</span>
-                          <div className="text-sm text-gray-500">
-                            {getEnabledCount(specialty.doctors)} de {specialty.doctors.length} médicos activos
-                          </div>
                         </div>
                       </div>
                       <Switch
@@ -281,7 +318,11 @@ export default function AdminPanel() {
                     {openSpecialties.includes(specialty.id) && (
                       <div className="px-4 pb-4">
                         <div className="ml-8 space-y-2 border-l-2 border-gray-100 pl-4">
-                          {specialty.doctors.length > 0 ? (
+                          {loadingDoctors.includes(specialty.id) ? (
+                            <div className="flex justify-center py-4">
+                              <Loader2 className="animate-spin w-5 h-5 text-blue-500" />
+                            </div>
+                          ) : specialty.doctors.length > 0 ? (
                             specialty.doctors.map(doctor => (
                               <div
                                 key={doctor.id}
@@ -290,14 +331,15 @@ export default function AdminPanel() {
                                 <div className="flex items-center gap-3">
                                   <UserRound className="w-4 h-4 text-gray-500" />
                                   <span className="font-medium text-gray-800">
-                                    {doctor.nombres} {doctor.apellidos}
+                                    {doctor.nombres ?? ""} {doctor.apellidos ?? ""}
                                   </span>
                                 </div>
                                 <Switch
-                                  checked={doctor.enabled && specialty.enabled}
+                                  checked={doctor.enabled}
                                   disabled={!specialty.enabled}
                                   onCheckedChange={() => toggleDoctor(specialty.id, doctor.id)}
                                 />
+
                               </div>
                             ))
                           ) : (
@@ -318,7 +360,11 @@ export default function AdminPanel() {
         </div>
 
         <div className="mt-8 text-center">
-          <Button disabled={isSaving} onClick={handleSave} className="bg-blue-700 hover:bg-blue-800">
+          <Button
+            disabled={isSaving}
+            onClick={handleSave}
+            className="bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white px-8 py-3 h-auto rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
+          >
             {isSaving ? "Guardando..." : "Guardar configuración"}
           </Button>
         </div>

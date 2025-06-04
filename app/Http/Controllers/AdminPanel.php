@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdminConfiguration;
 use App\Models\HealthInsurance;
 use App\Models\Specialty;
 use App\Models\Doctor;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Request;
 use Inertia\Inertia;
 
 class AdminPanel extends Controller
@@ -13,28 +15,17 @@ class AdminPanel extends Controller
 
     public function index()
     {
+        $configs = AdminConfiguration::all()->groupBy('type');
 
-        return Inertia::render('AdminPanel');
-    }
-
-
-    public function saveToggles(Request $request)
-    {
-        foreach ($request->healthInsurances as $item) {
-            HealthInsurance::where('external_id', $item['id'])->update(['enabled' => $item['enabled']]);
-        }
-
-        foreach ($request->specialties as $item) {
-            $specialty = Specialty::where('external_id', $item['id'])->first();
-            if ($specialty) {
-                $specialty->update(['enabled' => $item['enabled']]);
-
-                foreach ($item['doctors'] as $doc) {
-                    Doctor::where('external_id', $doc['id'])->update(['enabled' => $doc['enabled']]);
-                }
-            }
-        }
-
-        return response()->json(['message' => 'Configuración guardada']);
+        $normalizedConfig = $configs->map(function ($items, $type) {
+            return $items->map(function ($item) {
+                return [
+                    'value' => $item->reference_id,
+                ];
+            });
+        });
+        return Inertia::render('AdminPanel', [
+            'config' => $normalizedConfig,
+        ]);
     }
 }
