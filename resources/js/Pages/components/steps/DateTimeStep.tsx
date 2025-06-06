@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import axios from "axios"
 import { Button } from "shadcn/components/ui/button"
 import { Calendar } from "shadcn/components/ui/calendar"
-import { CalendarDays, Clock } from "lucide-react"
+import { CalendarDays, Clock, Loader2 } from "lucide-react"
 import { es } from "date-fns/locale"
 
 export default function DateTimeStep({ data, updateData, onNext, onBack, scrollToBottomSmooth }) {
@@ -86,7 +86,10 @@ export default function DateTimeStep({ data, updateData, onNext, onBack, scrollT
 
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
         {loading ? (
-          <p className="text-gray-500">Cargando fechas disponibles...</p>
+          <div className="flex items-center justify-center p-4">
+            <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+            <span className="ml-2 text-blue-600">Cargando horarios...</span>
+          </div>
         ) : slotsData.length === 0 ? (
           <div className="bg-amber-50 text-amber-800 p-4 rounded-lg text-center">
             <p>Este profesional no tiene horarios disponibles para la especialidad seleccionada.</p>

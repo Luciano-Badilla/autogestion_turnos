@@ -84,7 +84,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
 
   const renderStep = () => {
 
-    if (isRegistrationStep && step === 5) {
+    if (isRegistrationStep && step === 6) {
       return (
         <PatientRegistrationStep
           data={appointmentData}

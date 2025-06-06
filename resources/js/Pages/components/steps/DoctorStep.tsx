@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { Button } from "shadcn/components/ui/button"
-import { UserRound } from "lucide-react"
+import { Loader2, UserRound } from "lucide-react"
 import axios from "axios"
 
 export default function DoctorStep({ data, updateData, onNext, onBack, scrollToBottomSmooth }) {
@@ -115,7 +115,10 @@ export default function DoctorStep({ data, updateData, onNext, onBack, scrollToB
 
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
         {loading ? (
-          <p className="text-gray-500">Cargando profesionales...</p>
+          <div className="flex items-center justify-center p-4">
+            <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+            <span className="ml-2 text-blue-600">Cargando profesionales...</span>
+          </div>
         ) : doctors.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {doctors.map((doctor) => {

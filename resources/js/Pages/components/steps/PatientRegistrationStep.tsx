@@ -383,18 +383,21 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
               Obra Social <span className="text-red-500">*</span>
             </Label>
             <Select
-              value={data.healthInsurance?.id?.toString() || ''}
+              value={data.healthInsuranceId?.toString() || ""}
               onValueChange={(value) => {
-                const selected = filteredHealthInsurances.find(
-                  (insurance) => insurance.id.toString() === value
-                );
+                const selected = filteredHealthInsurances.find(h => h.id.toString() === value);
                 if (selected) {
-                  updateData({ healthInsuranceId: selected.id, healthInsurance: selected.nombre });
+                  updateData({
+                    healthInsuranceId: selected.id.toString(),
+                    healthInsurance: selected.nombre,
+                  });
                 }
               }}
             >
               <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                <SelectValue placeholder="Seleccione una obra social" />
+                <SelectValue placeholder="Seleccione una obra social">
+                  {data.healthInsurance}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {filteredHealthInsurances.map((insurance) => (
@@ -404,6 +407,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
                 ))}
               </SelectContent>
             </Select>
+
             {errors.healthInsurance && (
               <p className="text-rose-500 text-sm">{errors.healthInsurance}</p>
             )}

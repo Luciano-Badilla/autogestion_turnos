@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import { Button } from "shadcn/components/ui/button"
 import { Switch } from "shadcn/components/ui/switch"
+import { Toaster } from "sonner";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -28,7 +30,6 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
   const [loadingDoctors, setLoadingDoctors] = useState<number[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-
   const [searchHealthInsurance, setSearchHealthInsurance] = useState("")
   const [searchSpecialty, setSearchSpecialty] = useState("")
   const [showOnlyEnabledInsurances, setShowOnlyEnabledInsurances] = useState(false)
@@ -182,7 +183,8 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
         }),
       })
 
-      alert("Configuración guardada exitosamente")
+      toast.success("Configuración guardada exitosamente");
+
     } catch (error) {
       alert("Error al guardar la configuración")
     } finally {
@@ -237,7 +239,7 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
                 </div>
               </div>
               <CardDescription className="font-semibold">
-                Seleccione las obras sociales disponibles, cuando un paciente nuevo se registre.
+                Seleccione las obras sociales disponibles cuando un paciente nuevo se registre.
               </CardDescription>
               <Badge variant="secondary" className="w-fit bg-gray-200">
                 {getEnabledCount(healthInsurances)} de {healthInsurances.length} activas
@@ -288,7 +290,7 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
                   <span className="text-sm font-semibold text-gray-700">Mostrar solo activas</span>
                 </div>
               </div>
-              <CardDescription>
+              <CardDescription className="font-semibold">
                 Seleccione las especialidades médicas y médicos habilitados.
               </CardDescription>
               <Badge variant="secondary" className="w-fit bg-gray-200">
@@ -384,6 +386,7 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
           </Button>
         </div>
       </div>
+      <Toaster richColors position="top-center" />
     </div>
   )
 }

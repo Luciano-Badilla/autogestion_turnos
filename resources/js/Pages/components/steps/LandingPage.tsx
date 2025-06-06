@@ -85,7 +85,7 @@ export function LandingPage({ onAccessGranted }: LandingPageProps) {
 
   // Abrir WhatsApp
   const openWhatsApp = () => {
-    const phoneNumber = "5491123456789" // Reemplazar con el número real
+    const phoneNumber = "5492612053408" // Reemplazar con el número real
     const whatsappUrl = `https://wa.me/${phoneNumber}`
     window.open(whatsappUrl, "_blank")
   }
@@ -134,7 +134,6 @@ export function LandingPage({ onAccessGranted }: LandingPageProps) {
                   <ul className="text-blue-700 text-sm space-y-1">
                     <li>• Solo permite solicitar <strong>consultas médicas</strong>.</li>
                     <li>• No se gestionan turnos para <strong>prácticas o estudios médicos</strong>.</li>
-                    <li>• Para prácticas, debe contactarse vía <strong>WhatsApp</strong>.</li>
                   </ul>
                 </div>
 
@@ -168,14 +167,14 @@ export function LandingPage({ onAccessGranted }: LandingPageProps) {
             <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
               <CardTitle className="flex items-center gap-2 text-green-800">
                 <MessageCircle className="w-6 h-6" />
-                ¿Necesita un turno para una práctica?
+                ¿Necesita realizar una práctica?
               </CardTitle>
               <CardDescription>
                 Las prácticas médicas se solicitan exclusivamente por WhatsApp.
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="space-y-4">
+              <div className="flex flex-col gap-4 justify-between">
                 <p className="text-gray-700">
                   Para solicitar turnos relacionados con <strong>prácticas médicas o estudios</strong>
                   , debe comunicarse directamente por <strong>WhatsApp</strong>.
@@ -184,8 +183,6 @@ export function LandingPage({ onAccessGranted }: LandingPageProps) {
                   <h4 className="font-medium text-green-800 mb-2">Horarios de atención:</h4>
                   <ul className="text-green-700 text-sm space-y-1">
                     <li>• Lunes a Viernes: 8:00 - 20:00</li>
-                    <li>• Sábados: 8:00 - 14:00</li>
-                    <li>• Domingos: Solo emergencias</li>
                   </ul>
                 </div>
                 <Button

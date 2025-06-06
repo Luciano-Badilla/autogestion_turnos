@@ -153,7 +153,7 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
   }
 
   const handleRegisterNew = () => {
-    updateData({ documentNumber: dniInput })
+    updateData({ documentNumber: dniInput, email: "", phone: "", healthInsurance: "", healthInsuranceId: "", planId: null, personId: null, firstName: "", lastName: "" })
     onRegisterNew()
   }
   return (
