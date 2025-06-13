@@ -20,11 +20,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/healthinsurances', [AppointmentForm::class, 'getHealthInsurances']);
+Route::get('/planes/{id}', [AppointmentForm::class, 'getPlanes']);
 Route::get('/specialties', [AppointmentForm::class, 'getSpecialties']);
 Route::get('/doctors/{id}', [AppointmentForm::class, 'getDoctorsBySpeciality'])->name('getDoctorsBySpeciality');
 Route::get('/dateTime/{id?}/{specialtyId?}', [AppointmentForm::class, 'getDateTimeByDoctor'])->name('getDateTimeByDoctor');
 Route::get('/personalInfo/{dni}', [AppointmentForm::class, 'getPersonalInfoByDni'])->name('getPersonalInfoByDni');
 Route::post('/turno/confirmacion', [AppointmentForm::class, 'postTurno'])->name('postTurno');
+Route::post('/person/store', [AppointmentForm::class, 'postPersona'])->name('postPersona');
 // routes/api.php
 Route::get('/enabled-doctors', [DoctorController::class, 'getEnabledDoctors']);
 Route::get('/enabled-healthinsurances', [HealthinsurancesController::class, 'getEnabledhealthinsurances']);

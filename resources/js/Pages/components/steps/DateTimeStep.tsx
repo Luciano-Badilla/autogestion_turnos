@@ -43,7 +43,7 @@ export default function DateTimeStep({ data, updateData, onNext, onBack, scrollT
 
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
-      updateData({ date, time: "", planId: null, agenda: null })
+      updateData({ date, time: "", agendaId: null })
     }
   }
 
@@ -134,8 +134,7 @@ export default function DateTimeStep({ data, updateData, onNext, onBack, scrollT
                           if (selectedSlot) {
                             updateData({
                               time,
-                              planId: selectedSlot.agenda,
-                              agenda: selectedSlot.agenda,
+                              agendaId: selectedSlot.agenda,
                             })
                           }
                           scrollToBottomSmooth();

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "s
 import { UserPlus } from "lucide-react"
 import { useEffect, useState } from "react"
 import axios from 'axios';
+import { set } from "date-fns"
 
 // Generar arrays para los selectores de fecha
 const currentYear = new Date().getFullYear()
@@ -54,6 +55,8 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
   const [healthInsurances, setHealthInsurances] = useState([]);
   const [enabledIds, setEnabledIds] = useState([]);
   const [filteredHealthInsurances, setFilteredHealthInsurances] = useState([]);
+  const [planes, setPlanes] = useState([]);
+  const [isLoadingPlanes, setIsLoadingPlanes] = useState(false);
 
   // Función para actualizar la fecha completa cuando cambia algún componente
   const updateBirthDate = (day: string, month: string, year: string) => {
@@ -82,6 +85,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
   }
 
   const handleYearChange = (year: string) => {
+
     setBirthYear(year)
     // Verificar si el día seleccionado es válido para el nuevo año (caso 29 de febrero)
     if (birthDay && birthMonth) {
@@ -102,8 +106,10 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
       gender: "",
       birthDate: "",
       phone: "",
+      phoneCode: "",
       email: "",
       healthInsurance: "",
+      plan: "",
     }
 
     if (!data.firstName) {
@@ -116,8 +122,8 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
 
     if (!data.documentNumber) {
       newErrors.documentNumber = "Por favor ingrese el número de documento"
-    } else if (!/^\d{7,8}$/.test(data.documentNumber)) {
-      newErrors.documentNumber = "El número de documento debe tener entre 7 y 8 dígitos"
+    } else if (!/^[a-zA-Z0-9]{7,8}$/.test(data.documentNumber)) {
+      newErrors.documentNumber = "El documento debe tener entre 7 y 8 caracteres alfanuméricos"
     }
 
     if (!data.gender) {
@@ -130,8 +136,10 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
 
     if (!data.phone) {
       newErrors.phone = "Por favor ingrese el número de celular"
-    } else if (!/^\d{10}$/.test(data.phone.replace(/\D/g, ""))) {
-      newErrors.phone = "Por favor ingrese un número de celular válido (10 dígitos)"
+    }
+
+    if (!data.phoneCode) {
+      newErrors.phoneCode = "Por favor ingrese el código de área"
     }
 
     if (!data.email) {
@@ -144,6 +152,10 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
       newErrors.healthInsurance = "Por favor seleccione una obra social"
     }
 
+    if (!data.plan) {
+      newErrors.healthInsurance = "Por favor seleccione un plan"
+    }
+
     setErrors(newErrors)
     return Object.values(newErrors).every((error) => error === "")
   }
@@ -151,23 +163,52 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!validateForm()) {
-      return
-    }
+    if (!validateForm()) return
 
     setIsSubmitting(true)
 
     try {
-      // Simular registro del paciente en la base de datos
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      const payload = {
+        data: {
+          attributes: {
+            nombres: data.firstName,
+            apellidos: data.lastName,
+            nacimiento: `${birthYear}-${birthMonth.padStart(2, "0")}-${birthDay.padStart(2, "0")}`,
+            documento: data.documentNumber,
+            sexo: data.gender[0], // convertir "masculino" => "m", "femenino" => "f", "otro" => "o"
+            celulares: {
+              codigoCelular: data.phoneCode,
+              numCelular: data.phone,
+            },
+            email: data.email,
+            obraSocialSelectedId: data.healthInsuranceId,
+            planSelectedId: data.planId,
+          }
+        }
+      }
 
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/person/store`, payload)
+
+      const personaId = response?.data?.data?.id
+
+      if (personaId) {
+        updateData({ personId: personaId })  // Guardar el ID en el estado del formulario
+        onNext()
+      } else {
+        console.error("No se recibió un ID de persona válido:", response.data)
+      }
+
+      console.log("Paciente registrado:", response.data)
       onNext()
+
     } catch (error) {
       console.error("Error al registrar paciente:", error)
+      alert("Ocurrió un error al registrar el paciente. Intente nuevamente.")
     } finally {
       setIsSubmitting(false)
     }
   }
+
 
   useEffect(() => {
     // Obtener ambas listas
@@ -175,12 +216,11 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
       try {
         const [allResponse, enabledResponse] = await Promise.all([
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/healthinsurances`),
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/enabled-healthinsurances`)
+          axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/enabled-healthinsurances`),
         ]);
 
         const all = allResponse.data;
         const enabled = enabledResponse.data;
-
 
         setHealthInsurances(all);
         setEnabledIds(enabled);
@@ -224,8 +264,23 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
 
 
   // Obtener días disponibles para el mes y año seleccionados
-  const availableDays =
-    birthMonth && birthYear ? getDaysInMonth(Number.parseInt(birthMonth), Number.parseInt(birthYear)) : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]
+  const availableDays = getDaysInMonth(birthMonth, birthYear || new Date().getFullYear());
+
+  const handleHealthInsuranceChange = async (id) => {
+    setIsLoadingPlanes(true);
+
+    try {
+      const [planesResponse] = await Promise.all([
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/planes/${id}`),
+      ]);
+      setPlanes(planesResponse.data);
+      setIsLoadingPlanes(false);
+
+    } catch (error) {
+      console.error('Error cargando datos:', error);
+    }
+  };
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
@@ -293,7 +348,6 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
               <SelectContent>
                 <SelectItem value="masculino">Masculino</SelectItem>
                 <SelectItem value="femenino">Femenino</SelectItem>
-                <SelectItem value="otro">Otro</SelectItem>
               </SelectContent>
             </Select>
             {errors.gender && <p className="text-rose-500 text-sm">{errors.gender}</p>}
@@ -347,21 +401,37 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
             </div>
             {errors.birthDate && <p className="text-rose-500 text-sm">{errors.birthDate}</p>}
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="phone" className="text-gray-700">
-              Celular <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="Ej: 1123456789"
-              value={data.phone}
-              onChange={(e) => updateData({ phone: e.target.value })}
-              className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-            />
-            {errors.phone && <p className="text-rose-500 text-sm">{errors.phone}</p>}
+          <div className="flex flex-row gap-3">
+            <div className="space-y-2 max-w-[25%]">
+              <Label htmlFor="phone" className="text-gray-700">
+                Codigo de Área <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="phoneCode"
+                type="tel"
+                placeholder="Ej MDZ: 261"
+                value={data.phoneCode}
+                onChange={(e) => updateData({ phoneCode: e.target.value })}
+                className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 max-w-full"
+              />
+              {errors.phone && <p className="text-rose-500 text-sm">{errors.phoneCode}</p>}
+            </div>
+            <div className="space-y-2 w-full">
+              <Label htmlFor="phone" className="text-gray-700">
+                Celular <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="Ej: 1123456789"
+                value={data.phone}
+                onChange={(e) => updateData({ phone: e.target.value })}
+                className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-w-[100%]"
+              />
+              {errors.phone && <p className="text-rose-500 text-sm">{errors.phone}</p>}
+            </div>
           </div>
+
 
           <div className="space-y-2">
             <Label htmlFor="email" className="text-gray-700">
@@ -377,41 +447,80 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
             />
             {errors.email && <p className="text-rose-500 text-sm">{errors.email}</p>}
           </div>
+          <div className="flex flex-col md:flex-row lg:flex-row gap-6">
+            <div className="space-y-2 md:col-span-2 min-w-[100%]">
+              <Label className="text-gray-700">
+                Obra Social <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={data.healthInsuranceId?.toString() || ""}
+                onValueChange={(value) => {
+                  const selected = filteredHealthInsurances.find(h => h.id.toString() === value);
+                  if (selected) {
+                    updateData({
+                      healthInsuranceId: selected.id.toString(),
+                      healthInsurance: selected.nombre,
+                    });
+                    handleHealthInsuranceChange(selected.id.toString());
+                  }
+                }}
+              >
+                <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectValue placeholder="Seleccione una obra social">
+                    {data.healthInsurance}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredHealthInsurances.map((insurance) => (
+                    <SelectItem key={insurance.id} value={insurance.id.toString()}>
+                      {insurance.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-          <div className="space-y-2 md:col-span-2">
-            <Label className="text-gray-700">
-              Obra Social <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={data.healthInsuranceId?.toString() || ""}
-              onValueChange={(value) => {
-                const selected = filteredHealthInsurances.find(h => h.id.toString() === value);
-                if (selected) {
-                  updateData({
-                    healthInsuranceId: selected.id.toString(),
-                    healthInsurance: selected.nombre,
-                  });
-                }
-              }}
-            >
-              <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                <SelectValue placeholder="Seleccione una obra social">
-                  {data.healthInsurance}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {filteredHealthInsurances.map((insurance) => (
-                  <SelectItem key={insurance.id} value={insurance.id.toString()}>
-                    {insurance.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {errors.healthInsurance && (
+                <p className="text-rose-500 text-sm">{errors.healthInsurance}</p>
+              )}
+            </div>
+            <div className="space-y-2 md:col-span-2 min-w-[100%]">
+              <Label className="text-gray-700">
+                Plan <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={data.planId?.toString() || ""}
+                disabled={!data.healthInsuranceId || isLoadingPlanes}
+                onValueChange={(value) => {
+                  const selected = planes.find(h => h.id.toString() === value);
+                  if (selected) {
+                    updateData({
+                      planId: selected.id.toString(),
+                      plan: selected.nombre,
+                    });
+                  }
+                }}
+              >
+                <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectValue placeholder="Seleccione una obra social">
+                    {data.planes}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {planes.map((plan) => (
+                    <SelectItem key={plan.id} value={plan.id.toString()}>
+                      {plan.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            {errors.healthInsurance && (
-              <p className="text-rose-500 text-sm">{errors.healthInsurance}</p>
-            )}
+              {errors.plan && (
+                <p className="text-rose-500 text-sm">{errors.plan}</p>
+              )}
+            </div>
           </div>
+
+
 
         </div>
 

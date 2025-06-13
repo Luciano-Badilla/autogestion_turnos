@@ -44,7 +44,9 @@ class AppointmentForm extends Controller
 
     public function getHealthInsurances()
     {
-        $response = Http::timeout(60)->get('http://172.22.118.101:81/apiturnos/public/api/v1/obrasocial');
+        $response = Http::timeout(60)->withHeaders([
+            ENV('API_HEADER') => ENV('API_PASS')
+        ])->get('http://172.22.118.101:81/apiturnos/public/api/v1/obrasocial');
 
         if ($response->successful()) {
             $json = $response->json();
@@ -66,11 +68,40 @@ class AppointmentForm extends Controller
         return [];
     }
 
+    public function getPlanes($id)
+    {
+        $response = Http::timeout(60)->withHeaders([
+            ENV('API_HEADER') => ENV('API_PASS')
+        ])->get('http://172.22.118.101:81/apiturnos/public/api/v1/planes/' . $id);
+
+        if ($response->successful()) {
+            $json = $response->json();
+
+
+            if (isset($json['planes'])) {
+                $planes = json_decode($json['planes'], true);
+            } else {
+                $planes = $json;
+            }
+
+            // Ordenar alfabéticamente por nombre
+            usort($planes, function ($a, $b) {
+                return strcmp($a['nombre'], $b['nombre']);
+            });
+
+            return $planes;
+        }
+
+        return [];
+    }
+
 
 
     public function getSpecialties()
     {
-        $response = Http::timeout(60)->get('http://172.22.118.101:81/apiturnos/public/api/v1/especialidades');
+        $response = Http::timeout(60)->withHeaders([
+            ENV('API_HEADER') => ENV('API_PASS')
+        ])->get('http://172.22.118.101:81/apiturnos/public/api/v1/especialidades');
 
         if ($response->successful()) {
             $specialties = $response->json();
@@ -91,7 +122,9 @@ class AppointmentForm extends Controller
     public function getDoctorsBySpeciality($id)
     {
         // Hacer una solicitud a la API externa
-        $response = Http::timeout(60)->get('http://172.22.118.101:81/apiturnos/public/api/v1/profesionales/' . $id);
+        $response = Http::timeout(60)->withHeaders([
+            ENV('API_HEADER') => ENV('API_PASS')
+        ])->get('http://172.22.118.101:81/apiturnos/public/api/v1/profesionales/' . $id);
 
         // Verificar si la respuesta es correcta
         if ($response->successful()) {
@@ -104,7 +137,9 @@ class AppointmentForm extends Controller
 
     public function getDateTimeByDoctor($id, $specialtyId)
     {
-        $response = Http::timeout(60)->get('http://172.22.118.101:81/apiturnos/public/api/v1/turnos/' . $id . '/' . $specialtyId);
+        $response = Http::timeout(60)->withHeaders([
+            ENV('API_HEADER') => ENV('API_PASS')
+        ])->get('http://172.22.118.101:81/apiturnos/public/api/v1/turnos/' . $id . '/' . $specialtyId);
 
         // Verificar si la respuesta es correcta
         if ($response->successful()) {
@@ -117,7 +152,9 @@ class AppointmentForm extends Controller
 
     public function getPersonalInfoByDni($dni)
     {
-        $response = Http::timeout(60)->get('http://172.22.118.101:81/apiturnos/public/api/v1/personas/' . $dni);
+        $response = Http::timeout(60)->withHeaders([
+            ENV('API_HEADER') => ENV('API_PASS')
+        ])->get('http://172.22.118.101:81/apiturnos/public/api/v1/personas/' . $dni);
 
         // Verificar si la respuesta es correcta
         if ($response->successful()) {
@@ -141,7 +178,28 @@ class AppointmentForm extends Controller
         ]);
 
 
-        $response = Http::post('http://172.22.118.101:81/apiturnos/public/api/v1/crear/turno', $validated);
+        $response = Http::withHeaders([
+            ENV('API_HEADER') => ENV('API_PASS')
+        ])->post('http://172.22.118.101:81/apiturnos/public/api/v1/crear/turno', $validated);
+
+        if ($response->successful()) {
+            return response()->json($response->json(), 200);
+        } else {
+            return response()->json(['error' => 'Error al crear el turno'], $response->status());
+        }
+    }
+
+    public function postPersona(Request $request)
+    {
+
+        $validated = $request->all();
+
+        $response = Http::withHeaders([
+            ENV('API_HEADER') => ENV('API_PASS')
+        ])->post('http://172.22.118.101:81/apiturnos/public/api/v1/crear/persona', $validated);
+
+        Log::info($response);
+
 
         if ($response->successful()) {
             return response()->json($response->json(), 200);

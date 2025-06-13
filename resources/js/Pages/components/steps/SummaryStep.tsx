@@ -34,7 +34,7 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
         (slot: any) =>
           slot.hora === data.time &&
           slot.fecha === format(new Date(data.date), "yyyy-MM-dd") &&
-          slot.agenda === data.agenda
+          slot.agenda === data.agendaId
       )
 
       if (!isStillAvailable) {
@@ -53,7 +53,7 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
           hora: data.time,
           fecha: format(new Date(data.date), "yyyy-MM-dd"),
           orden: -1,
-          agenda_id: data.agenda,
+          agenda_id: data.agendaId,
           persona_id: data.personId,
           especialidad_id: data.specialtyId,
         }),
@@ -133,14 +133,14 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
             <p>
               <span className="text-gray-500">Contacto:</span>{" "}
               <span className="font-medium text-gray-800">
-                {data.phone} | {data.email}
+                {data.phoneCode+data.phone} | {data.email}
               </span>
             </p>
           </div>
         </div>
         <Button
           onClick={() => window.location.reload()}
-          className="bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white px-8 py-5 h-auto rounded-xl shadow-md hover:shadow-lg transition-all duration-200 mt-6"
+          className="bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white px-8 py-3 h-auto rounded-xl shadow-md hover:shadow-lg transition-all duration-200 mt-6"
         >
           Solicitar nuevo turno
         </Button>
@@ -196,7 +196,7 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
           </div>
           <div className="space-y-1">
             <p className="text-sm text-blue-600">Celular</p>
-            <p className="font-medium text-gray-800">{data.phone}</p>
+            <p className="font-medium text-gray-800">{data.phoneCode+data.phone}</p>
           </div>
         </div>
       </div>
@@ -233,7 +233,7 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
           {isSubmitting ? (
             <span className="flex items-center gap-2">
               <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
-              Procesando...
+              Registrando turno...
             </span>
           ) : (
             "Confirmar turno"

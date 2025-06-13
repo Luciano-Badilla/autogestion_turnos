@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "shadcn/components/ui/button"
 import { Input } from "shadcn/components/ui/input"
 import { Label } from "shadcn/components/ui/label"
@@ -17,7 +17,7 @@ const searchPatientByDNI = async (dni: string) => {
   return data
 }
 
-export default function PersonalInfoStep({ data, updateData, onNext, onBack, onRegisterNew, scrollToBottomSmooth }) {
+export default function PersonalInfoStep({ data, updateData, onNext, onBack, onRegisterNew }) {
   const [dniInput, setDniInput] = useState(data.documentNumber)
   const [dniError, setDniError] = useState("")
   const [isSearching, setIsSearching] = useState(false)
@@ -31,6 +31,14 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
   const [phoneInput, setPhoneInput] = useState("")
   const [phoneError, setPhoneError] = useState("")
   const [needsPhone, setNeedsPhone] = useState(false)
+
+  const patientDataRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (patientFound && patientDataRef.current) {
+      patientDataRef.current.scrollIntoView({ behavior: "smooth" })
+    }
+  }, [patientFound])
 
   const validateDNI = (dni: string) => {
     if (!dni) return "Por favor ingrese su número de documento"
@@ -85,23 +93,18 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
         firstName: patientData.nombres,
         lastName: patientData.apellidos,
         email: patientData.email ?? "",
-        phone: patientData.contacto_telefono?.trim()
-          ? patientData.contacto_telefono
-          : (patientData.contacto_telefono_2?.trim()
-            ? patientData.contacto_telefono_2
-            : ""),
+        phone: telefono,
         healthInsurance: patientData.obra_social,
         healthInsuranceId: patientData.obra_social_id,
         planId: patientData.plan_id,
         personId: patientData.id,
-
       })
 
       setPatientFound(true)
     } catch (error) {
       console.error("Error al buscar paciente:", error)
       setNotFoundError(true)
-      updateData({ firstName: "", lastName: "", email: "", phone: "", healthInsurance: "", healthInsuranceId: "", documentNumber: "", planId: null })
+      updateData({ firstName: "", lastName: "", email: "", phone: "", healthInsurance: "", healthInsuranceId: "", documentNumber: "" })
       setPatientFound(false)
     } finally {
       setIsSearching(false)
@@ -153,9 +156,10 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
   }
 
   const handleRegisterNew = () => {
-    updateData({ documentNumber: dniInput, email: "", phone: "", healthInsurance: "", healthInsuranceId: "", planId: null, personId: null, firstName: "", lastName: "" })
+    updateData({ documentNumber: dniInput, email: "", phone: "", healthInsurance: "", healthInsuranceId: "", personId: null, firstName: "", lastName: "" })
     onRegisterNew()
   }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="flex flex-col md:flex-row gap-8 items-center">
@@ -170,7 +174,6 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
 
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
         <div className="max-w-md mx-auto space-y-6">
-          {/* Campo de búsqueda de DNI - siempre visible */}
           <div className="space-y-2">
             <Label htmlFor="documentNumber" className="text-gray-700 flex items-center gap-2">
               <FileText className="w-4 h-4 text-blue-600" />
@@ -207,7 +210,6 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
             {dniError && <p className="text-rose-500 text-sm">{dniError}</p>}
           </div>
 
-          {/* Mensaje de error cuando no se encuentra el DNI */}
           {notFoundError && (
             <div className="bg-rose-50 border border-rose-200 rounded-lg p-4 space-y-4">
               <div className="flex items-start gap-3">
@@ -232,9 +234,8 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
             </div>
           )}
 
-          {/* Datos del paciente - solo visibles cuando se encuentra */}
           {patientFound && (
-            <div className="mt-6 border-t border-gray-100 pt-6">
+            <div ref={patientDataRef} className="mt-6 border-t border-gray-100 pt-6">
               <h3 className="font-medium text-blue-700 mb-4">Datos del paciente</h3>
 
               <div className="space-y-4">
@@ -254,7 +255,6 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
                   </div>
                 </div>
 
-                {/* Email - campo de entrada si no existe, o mostrar el existente */}
                 <div className="space-y-1">
                   <p className="text-sm text-gray-500">Email</p>
                   {needsEmail ? (
@@ -283,7 +283,6 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
                   )}
                 </div>
 
-                {/* Celular - campo de entrada si no existe, o mostrar el existente */}
                 <div className="space-y-1">
                   <p className="text-sm text-gray-500">Celular</p>
                   {needsPhone ? (

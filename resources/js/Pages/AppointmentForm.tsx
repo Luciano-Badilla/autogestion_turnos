@@ -14,20 +14,24 @@ import { LandingPage } from "./components/steps/LandingPage"
 export default function AppointmentForm({ healthInsurances, specialties }) {
   const [step, setStep] = useState(1)
   const [appointmentData, setAppointmentData] = useState({
-    healthInsuranceId: "",
+    healthInsuranceId: null,
     healthInsurance: "",
+    plan: "",
+    planId: null,
     specialtyId: "",
     specialty: "",
     doctorId: null,
     doctor: "",
     date: null,
     time: "",
-    planId: null,
+    agendaId: null,
     personId: null,
     documentNumber: "",
     firstName: "",
     lastName: "",
     email: "",
+    phone:"",
+    phoneCode: null
   })
 
   console.log(appointmentData);
@@ -97,7 +101,9 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
 
     switch (step) {
       case 1:
-        return (<LandingPage onAccessGranted={nextStep} />);
+        nextStep();
+
+        //return (<LandingPage onAccessGranted={nextStep} />);
       case 2:
         nextStep();
       /*return (
