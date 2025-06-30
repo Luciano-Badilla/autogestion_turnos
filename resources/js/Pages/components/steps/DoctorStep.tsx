@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { Button } from "shadcn/components/ui/button"
-import { Loader2, UserRound } from "lucide-react"
+import { Loader2, UserCircle, UserRound } from "lucide-react"
 import axios from "axios"
 
 export default function DoctorStep({ data, updateData, onNext, onBack, scrollToBottomSmooth }) {
@@ -102,13 +102,13 @@ export default function DoctorStep({ data, updateData, onNext, onBack, scrollToB
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="flex flex-col md:flex-row gap-8 items-center">
         <div className="bg-blue-50 rounded-full p-6 flex-shrink-0">
-          <UserRound className="w-12 h-12 text-blue-600" />
+          <UserRound className="w-12 h-12 text-[#013765]" />
         </div>
         <div className="space-y-2 text-center md:text-left">
           <h2 className="text-2xl font-bold text-gray-800">Seleccione profesional</h2>
           <p className="text-gray-600">
             Elija el profesional para{" "}
-            <span className="text-blue-600 font-medium">{data.specialty}</span>
+            <span className="text-[#013765] font-medium">{data.specialty}</span>
           </p>
         </div>
       </div>
@@ -116,8 +116,8 @@ export default function DoctorStep({ data, updateData, onNext, onBack, scrollToB
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
         {loading ? (
           <div className="flex items-center justify-center p-4">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-            <span className="ml-2 text-blue-600">Cargando profesionales...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-[#013765]" />
+            <span className="ml-2 text-[#013765]">Cargando profesionales...</span>
           </div>
         ) : doctors.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -128,28 +128,46 @@ export default function DoctorStep({ data, updateData, onNext, onBack, scrollToB
                 <div
                   key={doctor.id}
                   className={`relative rounded-xl p-4 cursor-pointer transition-all duration-200 ${isSelected
-                    ? "bg-gradient-to-br from-blue-50 to-blue-50 border-2 border-blue-400 shadow-md"
-                    : "bg-white border border-gray-200 hover:border-blue-200"
+                      ? "bg-gradient-to-br from-blue-50 to-blue-50 border-2 border-[#013765] shadow-md"
+                      : "bg-white border border-gray-200 hover:border-blue-200"
                     } ${disabled ? "opacity-50 cursor-not-allowed" : "hover:shadow-md"}`}
                   onClick={() => {
-                    if (disabled) return
+                    if (disabled) return;
                     updateData({
                       doctor: doctor.nombres + " " + doctor.apellidos,
                       doctorId: doctor.id,
                       date: null,
                       time: "",
-                    })
-                    scrollToBottomSmooth()
+                    });
+                    scrollToBottomSmooth();
                   }}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold text-gray-800">
-                      Dr/a {doctor.nombres} {doctor.apellidos}
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      {doctor.imagen_url ? (
+                        <img
+                          src={doctor.imagen_url}
+                          alt={`Imagen de ${doctor.nombres}`}
+                          className="w-12 h-12 object-cover rounded-full border border-gray-300"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = "/default-doctor.png";
+                          }}
+                        />
+                      ) : (
+                        <UserCircle className="w-12 h-12 text-[#013765]" />
+                      )}
+                      <span className="font-semibold text-gray-800">
+                        Prof. {doctor.nombres} {doctor.apellidos}
+                      </span>
+                    </div>
+                    <span className="text-[#013765] font-semibold">
+                      {doctor.turnosDisponibles} Turnos
                     </span>
-                    <span className="text-blue-600 font-semibold">{doctor.turnosDisponibles} Turnos</span>
                   </div>
+
                   {isSelected && (
-                    <div className="absolute top-2 right-2 w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <div className="absolute top-2 right-2 w-3 h-3 bg-[#013765] rounded-full"></div>
                   )}
                 </div>
               )
@@ -174,7 +192,7 @@ export default function DoctorStep({ data, updateData, onNext, onBack, scrollToB
         </Button>
         <Button
           type="submit"
-          className="bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white px-8 py-3 h-auto rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
+          className="bg-[#013765] hover:bg-blue-800 text-white px-8 py-3 h-auto rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
           disabled={doctors.length === 0 || doctors.every(d => d.turnosDisponibles === 0)}
         >
           Continuar

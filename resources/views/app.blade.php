@@ -3,9 +3,12 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>Turnos</title>
+    <title>Hospital Universitario - Autogestion de turnos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/autogestion_turnos_hu/public/images/hu_favicon_new.png" type="image/x-icon" />
+    
+
 
     @routes
     <style>

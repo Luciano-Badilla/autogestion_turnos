@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import HealthInsuranceStep from "./components/steps/HealthInsuranceStep"
 import SpecialtyStep from "./components/steps/SpecialtyStep"
 import HuIcon from "./components/HuIcon"
@@ -13,6 +13,7 @@ import { LandingPage } from "./components/steps/LandingPage"
 
 export default function AppointmentForm({ healthInsurances, specialties }) {
   const [step, setStep] = useState(1)
+
   const [appointmentData, setAppointmentData] = useState({
     healthInsuranceId: null,
     healthInsurance: "",
@@ -30,13 +31,11 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
     firstName: "",
     lastName: "",
     email: "",
-    phone:"",
+    phone: "",
     phoneCode: null
   })
 
-  console.log(appointmentData);
-
-  const totalSteps = 7
+  const totalSteps = 6
 
   const updateData = (data) => {
     setAppointmentData((prev) => ({ ...prev, ...data }))
@@ -45,6 +44,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
   const nextStep = () => {
     if (step < totalSteps) {
       setStep(step + 1)
+      window.history.pushState({ step: step + 1 }, "")
       window.scrollTo(0, 0)
     }
   }
@@ -53,6 +53,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
 
     if (step > 1 && isRegistrationStep == false) {
       setStep(step - 1)
+      window.history.pushState({ step: step - 1 }, "")
       window.scrollTo(0, 0)
     } else {
       setIsRegistrationStep(false)
@@ -86,9 +87,30 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
     nextStep()
   }
 
+  useEffect(() => {
+    window.history.replaceState({ step }, "")
+  }, [])
+
+  // Manejar botón "atrás" del navegador
+  useEffect(() => {
+    const handlePopState = (event) => {
+      const newStep = event.state?.step
+      if (newStep !== undefined) {
+        setStep(newStep)
+      } else {
+        setStep(1)
+      }
+    }
+
+    window.addEventListener("popstate", handlePopState)
+    return () => {
+      window.removeEventListener("popstate", handlePopState)
+    }
+  }, [])
+
   const renderStep = () => {
 
-    if (isRegistrationStep && step === 6) {
+    if (isRegistrationStep && step === 5) {
       return (
         <PatientRegistrationStep
           data={appointmentData}
@@ -101,12 +123,12 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
 
     switch (step) {
       case 1:
-        nextStep();
+        //nextStep();
 
-        //return (<LandingPage onAccessGranted={nextStep} />);
-      case 2:
+        return (<LandingPage onAccessGranted={nextStep} />);
+      /*case 2:
         nextStep();
-      /*return (
+      return (
         <HealthInsuranceStep
           healthInsurances={healthInsurances}
           data={appointmentData}
@@ -116,7 +138,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
         />
       );*/
 
-      case 3:
+      case 2:
         return (
           <SpecialtyStep
             specialties={specialties}
@@ -127,7 +149,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
             scrollToBottomSmooth={scrollToBottomSmooth}
           />
         );
-      case 4:
+      case 3:
         return (
           <DoctorStep
             data={appointmentData}
@@ -138,7 +160,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
 
           />
         );
-      case 5:
+      case 4:
         return (
           <DateTimeStep
             data={appointmentData}
@@ -148,7 +170,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
             scrollToBottomSmooth={scrollToBottomSmooth}
           />
         );
-      case 6:
+      case 5:
         return (
           <PersonalInfoStep
             data={appointmentData}
@@ -160,7 +182,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
           />
         );
 
-      case 7:
+      case 6:
         return (
           <SummaryStep
             data={appointmentData}
@@ -175,17 +197,16 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="text-center mt-5 mb-5">
-        <HuIcon />
+    <div className="h-full w-full">
+      <div className="text-center bg-[#013765] w-full py-2">
+        <div className="relative min-w-5xl max-w-5xl mx-auto h-full w-full px-6">
+          <HuIcon />
+        </div>
       </div>
-      <div className="relative">
-        <div className="absolute -top-6 -left-6 w-24 h-24 bg-blue-200 rounded-full opacity-50 blur-xl"></div>
-        <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-blue-200 rounded-full opacity-50 blur-xl"></div>
-        <div className="relative bg-white backdrop-blur-sm bg-opacity-70 rounded-2xl shadow-xl border border-blue-100 overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 via-blue-500 to-blue-400"></div>
-          <div className="p-6 md:p-8">
-            <div className="space-y-8">
+      <div className="relative min-w-5xl max-w-5xl mx-auto h-full w-full">
+        <div className="h-full w-full bg-white backdrop-blur-sm bg-opacity-70 rounded-2xl overflow-hidden flex flex-col items-center justify-center">
+          <div className="p-6 md:p-8 w-full">
+            <div className="space-y-8 w-full">
               {renderStep()}
             </div>
           </div>

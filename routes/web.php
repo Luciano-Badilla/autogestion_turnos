@@ -20,6 +20,9 @@ use Inertia\Inertia;
 
 
 Route::get('/formulario', [AppointmentForm::class, 'index']);
+Route::get('/consultar', function () {
+    return Inertia::render('Consult');
+});
 Route::middleware('auth')->group(function () {
     Route::get('/adminpanel', [AdminPanel::class, 'index']);
 

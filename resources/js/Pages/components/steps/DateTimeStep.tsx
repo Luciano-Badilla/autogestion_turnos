@@ -74,12 +74,12 @@ export default function DateTimeStep({ data, updateData, onNext, onBack, scrollT
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="flex flex-col md:flex-row gap-8 items-center">
         <div className="bg-blue-50 rounded-full p-6 flex-shrink-0">
-          <CalendarDays className="w-12 h-12 text-blue-600" />
+          <CalendarDays className="w-12 h-12 text-[#013765]" />
         </div>
         <div className="space-y-2 text-center md:text-left">
           <h2 className="text-2xl font-bold text-gray-800">Seleccione fecha y horario</h2>
           <p className="text-gray-600">
-            Elija cuándo desea atenderse con <span className="text-blue-600 font-medium">{data.doctor}</span>
+            Elija cuándo desea atenderse con <span className="text-[#013765] font-medium">{data.doctor}</span>
           </p>
         </div>
       </div>
@@ -87,8 +87,8 @@ export default function DateTimeStep({ data, updateData, onNext, onBack, scrollT
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
         {loading ? (
           <div className="flex items-center justify-center p-4">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-            <span className="ml-2 text-blue-600">Cargando horarios...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-[#013765]" />
+            <span className="ml-2 text-[#013765]">Cargando horarios...</span>
           </div>
         ) : slotsData.length === 0 ? (
           <div className="bg-amber-50 text-amber-800 p-4 rounded-lg text-center">
@@ -98,7 +98,7 @@ export default function DateTimeStep({ data, updateData, onNext, onBack, scrollT
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h3 className="font-medium text-gray-800 mb-4 flex items-center gap-2">
-                <CalendarDays className="w-5 h-5 text-blue-600" />
+                <CalendarDays className="w-5 h-5 text-[#013765]" />
                 Seleccione una fecha
               </h3>
               <Calendar
@@ -114,17 +114,17 @@ export default function DateTimeStep({ data, updateData, onNext, onBack, scrollT
 
             <div>
               <h3 className="font-medium text-gray-800 mb-4 flex items-center gap-2">
-                <Clock className="w-5 h-5 text-blue-600" />
+                <Clock className="w-5 h-5 text-[#013765]" />
                 Seleccione un horario
               </h3>
               {data.date ? (
                 timesForDate.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 ml-5">
                     {timesForDate.map((time) => (
                       <div
                         key={time}
                         className={`rounded-lg p-3 text-center cursor-pointer transition-all duration-200 ${data.time === time
-                          ? "bg-gradient-to-r from-blue-500 to-blue-500 text-white shadow-md"
+                          ? "bg-[#013765] text-white shadow-md"
                           : "bg-blue-100 hover:bg-gray-100 text-gray-800"
                           }`}
                         onClick={() => {
@@ -171,7 +171,7 @@ export default function DateTimeStep({ data, updateData, onNext, onBack, scrollT
         </Button>
         <Button
           type="submit"
-          className="bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white px-8 py-3 h-auto rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
+          className="bg-[#013765] hover:bg-blue-800 text-white px-8 py-3 h-auto rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
         >
           Continuar
         </Button>

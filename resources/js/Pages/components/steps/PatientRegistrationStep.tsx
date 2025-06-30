@@ -6,7 +6,7 @@ import { Button } from "shadcn/components/ui/button"
 import { Input } from "shadcn/components/ui/input"
 import { Label } from "shadcn/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "shadcn/components/ui/select"
-import { UserPlus } from "lucide-react"
+import { Loader2, UserPlus } from "lucide-react"
 import { useEffect, useState } from "react"
 import axios from 'axios';
 import { set } from "date-fns"
@@ -127,7 +127,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
     }
 
     if (!data.gender) {
-      newErrors.gender = "Por favor seleccione el sexo"
+      newErrors.gender = "Por favor seleccione el género"
     }
 
     if (!birthDay || !birthMonth || !birthYear) {
@@ -175,7 +175,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
             apellidos: data.lastName,
             nacimiento: `${birthYear}-${birthMonth.padStart(2, "0")}-${birthDay.padStart(2, "0")}`,
             documento: data.documentNumber,
-            sexo: data.gender[0], // convertir "masculino" => "m", "femenino" => "f", "otro" => "o"
+            género: data.gender[0], // convertir "masculino" => "m", "femenino" => "f", "otro" => "o"
             celulares: {
               codigoCelular: data.phoneCode,
               numCelular: data.phone,
@@ -286,7 +286,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="flex flex-col md:flex-row gap-8 items-center">
         <div className="bg-blue-50 rounded-full p-6 flex-shrink-0">
-          <UserPlus className="w-12 h-12 text-blue-600" />
+          <UserPlus className="w-12 h-12 text-[#013765]" />
         </div>
         <div className="space-y-2 text-center md:text-left">
           <h2 className="text-2xl font-bold text-gray-800">Registro de nuevo paciente</h2>
@@ -305,7 +305,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
               placeholder="Ingrese su nombre"
               value={data.firstName}
               onChange={(e) => updateData({ firstName: e.target.value })}
-              className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              className="h-12 border-gray-300 focus:border-[#013765] focus:ring-[#013765]"
             />
             {errors.firstName && <p className="text-rose-500 text-sm">{errors.firstName}</p>}
           </div>
@@ -319,7 +319,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
               placeholder="Ingrese su apellido"
               value={data.lastName}
               onChange={(e) => updateData({ lastName: e.target.value })}
-              className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              className="h-12 border-gray-300 focus:border-[#013765] focus:ring-[#013765]"
             />
             {errors.lastName && <p className="text-rose-500 text-sm">{errors.lastName}</p>}
           </div>
@@ -334,16 +334,16 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
               placeholder="Ej: 12345678"
               value={data.documentNumber}
               onChange={(e) => updateData({ documentNumber: e.target.value })}
-              className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              className="h-12 border-gray-300 focus:border-[#013765] focus:ring-[#013765]"
             />
             {errors.documentNumber && <p className="text-rose-500 text-sm">{errors.documentNumber}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label className="text-gray-700">Sexo <span className="text-red-500">*</span></Label>
+            <Label className="text-gray-700">Género <span className="text-red-500">*</span></Label>
             <Select value={data.gender} onValueChange={(value) => updateData({ gender: value })}>
-              <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                <SelectValue placeholder="Seleccione el sexo" />
+              <SelectTrigger className="h-12 border-gray-300 focus:border-[#013765] focus:ring-[#013765]">
+                <SelectValue placeholder="Seleccione el género" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="masculino">Masculino</SelectItem>
@@ -358,7 +358,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <Select value={birthDay} onValueChange={handleDayChange}>
-                  <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectTrigger className="h-12 border-gray-300 focus:border-[#013765] focus:ring-[#013765]">
                     <SelectValue placeholder="Día" />
                   </SelectTrigger>
                   <SelectContent className="max-h-48 mt-1 relative z-50 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-select-content-transform-origin]">
@@ -372,7 +372,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
               </div>
               <div>
                 <Select value={birthMonth} onValueChange={handleMonthChange}>
-                  <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectTrigger className="h-12 border-gray-300 focus:border-[#013765] focus:ring-[#013765]">
                     <SelectValue placeholder="Mes" />
                   </SelectTrigger>
                   <SelectContent className="max-h-48 mt-1 relative z-50 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-select-content-transform-origin]">
@@ -386,7 +386,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
               </div>
               <div>
                 <Select value={birthYear} onValueChange={handleYearChange}>
-                  <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectTrigger className="h-12 border-gray-300 focus:border-[#013765] focus:ring-[#013765]">
                     <SelectValue placeholder="Año" />
                   </SelectTrigger>
                   <SelectContent className="max-h-48">
@@ -412,7 +412,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
                 placeholder="Ej MDZ: 261"
                 value={data.phoneCode}
                 onChange={(e) => updateData({ phoneCode: e.target.value })}
-                className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 max-w-full"
+                className="h-12 border-gray-300 focus:border-[#013765] focus:ring-[#013765] max-w-full"
               />
               {errors.phone && <p className="text-rose-500 text-sm">{errors.phoneCode}</p>}
             </div>
@@ -426,7 +426,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
                 placeholder="Ej: 1123456789"
                 value={data.phone}
                 onChange={(e) => updateData({ phone: e.target.value })}
-                className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-w-[100%]"
+                className="h-12 border-gray-300 focus:border-[#013765] focus:ring-[#013765] min-w-[100%]"
               />
               {errors.phone && <p className="text-rose-500 text-sm">{errors.phone}</p>}
             </div>
@@ -443,7 +443,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
               placeholder="ejemplo@correo.com"
               value={data.email}
               onChange={(e) => updateData({ email: e.target.value })}
-              className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              className="h-12 border-gray-300 focus:border-[#013765] focus:ring-[#013765]"
             />
             {errors.email && <p className="text-rose-500 text-sm">{errors.email}</p>}
           </div>
@@ -465,7 +465,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
                   }
                 }}
               >
-                <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                <SelectTrigger className="h-12 border-gray-300 focus:border-[#013765] focus:ring-[#013765]">
                   <SelectValue placeholder="Seleccione una obra social">
                     {data.healthInsurance}
                   </SelectValue>
@@ -484,9 +484,19 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
               )}
             </div>
             <div className="space-y-2 md:col-span-2 min-w-[100%]">
-              <Label className="text-gray-700">
+              <Label className="text-gray-700 flex">
                 Plan <span className="text-red-500">*</span>
+                {isLoadingPlanes && (
+                  <span className="ml-2 text-[#013765]">
+                    <Loader2 className="w-6 h-6 animate-spin text-[#013765]" />
+                  </span>
+                )}{!isLoadingPlanes && (
+                  <span className="ml-2 text-white">
+                    <Loader2 className="w-6 h-6 animate-spin text-white" />
+                  </span>
+                )}
               </Label>
+
               <Select
                 value={data.planId?.toString() || ""}
                 disabled={!data.healthInsuranceId || isLoadingPlanes}
@@ -500,7 +510,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
                   }
                 }}
               >
-                <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                <SelectTrigger className="h-12 border-gray-300 focus:border-[#013765] focus:ring-[#013765]">
                   <SelectValue placeholder="Seleccione una obra social">
                     {data.planes}
                   </SelectValue>
@@ -524,7 +534,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
 
         </div>
 
-        <div className="mt-6 bg-blue-50 border border-blue-100 rounded-lg p-4 text-blue-800 text-sm">
+        <div className="mt-6 bg-blue-50 border border-blue-100 rounded-lg p-4 text-[#013765] text-sm">
           <p>
             Al registrarse, acepta que sus datos sean utilizados para la gestión de turnos médicos. Recibirá
             confirmaciones por email y recordatorios por Whatsapp.
@@ -544,7 +554,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white px-8 py-3 h-auto rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
+          className="bg-gradient-to-r from-[#013765] to-[#013765] hover:bg-blue-800 text-white px-8 py-3 h-auto rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
         >
           {isSubmitting ? (
             <span className="flex items-center gap-2">

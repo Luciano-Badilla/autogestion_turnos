@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import { Button } from "shadcn/components/ui/button"
 import { Input } from "shadcn/components/ui/input"
 import { Label } from "shadcn/components/ui/label"
-import { AlertCircle, FileText, Mail, Phone, Search, User, UserPlus } from "lucide-react"
+import { AlertCircle, FileText, Mail, Phone, Search, User, UserPlus, Info } from "lucide-react"
 
 // Función que hace la llamada real a la API Laravel
 const searchPatientByDNI = async (dni: string) => {
@@ -164,7 +164,7 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="flex flex-col md:flex-row gap-8 items-center">
         <div className="bg-blue-50 rounded-full p-6 flex-shrink-0">
-          <User className="w-12 h-12 text-blue-600" />
+          <User className="w-12 h-12 text-[#013765]" />
         </div>
         <div className="space-y-2 text-center md:text-left">
           <h2 className="text-2xl font-bold text-gray-800">Datos personales</h2>
@@ -176,7 +176,7 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
         <div className="max-w-md mx-auto space-y-6">
           <div className="space-y-2">
             <Label htmlFor="documentNumber" className="text-gray-700 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-blue-600" />
+              <FileText className="w-4 h-4 text-[#013765]" />
               Número de Documento (DNI)
             </Label>
             <div className="flex gap-2">
@@ -186,12 +186,12 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
                 placeholder="Ej: 12345678"
                 value={dniInput}
                 onChange={(e) => setDniInput(e.target.value)}
-                className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                className="h-12 border-gray-300 focus:border-[#013765] focus:ring-blue-500"
               />
               <Button
                 type="button"
                 onClick={handleSearch}
-                className="bg-blue-500 hover:bg-blue-600 text-white h-12 px-4"
+                className="bg-[#013765] hover:bg-blue-800 text-white h-12 px-4"
                 disabled={isSearching}
               >
                 {isSearching ? (
@@ -225,7 +225,7 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
                 <Button
                   type="button"
                   onClick={handleRegisterNew}
-                  className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-2"
+                  className="bg-[#013765] hover:bg-blue-800 text-white flex items-center gap-2"
                 >
                   <UserPlus className="w-4 h-4" />
                   Registrar nuevo paciente
@@ -236,7 +236,7 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
 
           {patientFound && (
             <div ref={patientDataRef} className="mt-6 border-t border-gray-100 pt-6">
-              <h3 className="font-medium text-blue-700 mb-4">Datos del paciente</h3>
+              <h3 className="font-medium text-[#013765] mb-4">Datos del paciente</h3>
 
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -313,8 +313,9 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
                 </div>
               </div>
 
-              <div className="mt-4 bg-blue-50 border border-blue-100 rounded-lg p-3 text-blue-800 text-sm">
-                <p>
+              <div className="mt-4 bg-blue-50 border border-blue-100 rounded-lg p-3 text-black text-sm flex flex-row">
+                <Info className="w-6 h-6" />
+                <p className="ml-2">
                   Estos datos se utilizarán para confirmar su turno. Recibirá la confirmación por email y un
                   recordatorio por Whatsapp.
                 </p>
@@ -335,7 +336,7 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
         </Button>
         <Button
           type="submit"
-          className="bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white px-8 py-3 h-auto rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
+          className="bg-[#013765] hover:bg-blue-800 text-white px-8 py-3 h-auto rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
           disabled={!patientFound || (needsEmail && !emailInput) || (needsPhone && !phoneInput)}
         >
           Continuar

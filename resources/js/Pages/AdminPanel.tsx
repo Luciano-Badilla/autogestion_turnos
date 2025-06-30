@@ -192,6 +192,48 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
     }
   }
 
+  const handleImageUpload = async (
+    e,
+    specialtyId,
+    doctorId
+  ) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const formData = new FormData()
+    formData.append("imagen", file)
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_APP_URL}/api/doctors/${doctorId}/upload-image`, {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!res.ok) throw new Error("Error al subir la imagen")
+      const updatedDoctor = await res.json()
+
+      // Actualizá la imagen en la UI
+      setSpecialties(prev =>
+        prev.map(s =>
+          s.id === specialtyId
+            ? {
+              ...s,
+              doctors: s.doctors.map(d =>
+                d.id === doctorId ? { ...d, imagen_url: updatedDoctor.imagen_url } : d
+              ),
+            }
+            : s
+        )
+      )
+
+      toast.success("Imagen actualizada correctamente")
+    } catch (err) {
+      console.error(err)
+      toast.error("Hubo un problema al subir la imagen")
+    }
+  }
+
+
   const getEnabledCount = (items: { enabled: boolean }[]) => items.filter(i => i.enabled).length
 
   const normalizeText = (text: string) =>
@@ -339,19 +381,37 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
                           </div>
                         ) : specialty.doctors.length > 0 ? (
                           specialty.doctors.map(doctor => (
-                            <div
-                              key={doctor.id}
-                              className="flex items-center justify-between p-2 border border-gray-200 rounded-md hover:bg-gray-50"
-                            >
+                            <div className="flex items-center justify-between p-2 border border-gray-200 rounded-md hover:bg-gray-50" key={doctor.id}>
                               <div className="flex items-center gap-2">
-                                <UserRound className="w-5 h-5 text-gray-500" />
+                                {doctor.imagen_url ? (
+                                  <img
+                                    src={doctor.imagen_url}
+                                    alt="Foto de perfil"
+                                    className="w-8 h-8 rounded-full object-cover border border-gray-300"
+                                  />
+                                ) : (
+                                  <UserRound className="w-6 h-6 text-gray-400" />
+                                )}
                                 <span>{`${doctor.apellidos ?? ""} ${doctor.nombres ?? ""}`}</span>
                               </div>
-                              <Switch
-                                checked={doctor.enabled}
-                                onCheckedChange={() => toggleDoctor(specialty.id, doctor.id)}
-                              />
+
+                              <div className="flex items-center gap-2">
+                                <Switch
+                                  checked={doctor.enabled}
+                                  onCheckedChange={() => toggleDoctor(specialty.id, doctor.id)}
+                                />
+                                <label className="cursor-pointer text-sm text-blue-600 hover:underline">
+                                  Cambiar foto
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={e => handleImageUpload(e, specialty.id, doctor.id)}
+                                  />
+                                </label>
+                              </div>
                             </div>
+
                           ))
                         ) : (
                           <p className="text-center text-gray-400">
