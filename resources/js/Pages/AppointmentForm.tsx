@@ -6,7 +6,7 @@ import HuIcon from "./components/HuIcon"
 import DoctorStep from "./components/steps/DoctorStep"
 import DateTimeStep from "./components/steps/DateTimeStep"
 import PersonalInfoStep from "./components/steps/PersonalInfoStep"
-import { a } from "framer-motion/dist/types.d-CtuPurYT"
+import { a, s } from "framer-motion/dist/types.d-CtuPurYT"
 import PatientRegistrationStep from "./components/steps/PatientRegistrationStep"
 import SummaryStep from "./components/steps/SummaryStep"
 import { LandingPage } from "./components/steps/LandingPage"
@@ -203,6 +203,19 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
           <HuIcon />
         </div>
       </div>
+      {step === 1 && (
+        <div className="text-center bg-blue-100 w-full py-4 border-b-4 border-gray-300">
+          <p className="text-center text-[#013765] text-3xl" style={{
+            fontFamily: '"Arial Unicode MS", sans-serif',
+            transform: 'scaleY(0.8)', // Achata el texto verticalmente
+            display: 'inline-block',  // Necesario para que transform funcione bien en texto
+          }}>
+            Gracias por ingresar a nuestro portal de turnos.
+          </p>
+        </div>
+      )}
+
+
       <div className="relative min-w-5xl max-w-5xl mx-auto h-full w-full">
         <div className="h-full w-full bg-white backdrop-blur-sm bg-opacity-70 rounded-2xl overflow-hidden flex flex-col items-center justify-center">
           <div className="p-6 md:p-8 w-full">

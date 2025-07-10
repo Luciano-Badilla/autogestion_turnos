@@ -534,10 +534,11 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
 
         </div>
 
-        <div className="mt-6 bg-blue-50 border border-blue-100 rounded-lg p-4 text-[#013765] text-sm">
+        <div className="mt-6 bg-blue-50 border border-blue-100 rounded-lg p-4 text-black text-sm text-center">
           <p>
-            Al registrarse, acepta que sus datos sean utilizados para la gestión de turnos médicos. Recibirá
-            confirmaciones por email y recordatorios por Whatsapp.
+            Al registrarse, acepta que sus datos sean utilizados para la gestión de turnos médicos.</p>
+          <p>
+            Recibirá confirmaciones por email y recordatorios por Whatsapp.
           </p>
         </div>
       </div>

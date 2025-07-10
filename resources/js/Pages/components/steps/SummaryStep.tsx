@@ -228,8 +228,8 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="flex flex-col md:flex-row gap-8 items-center">
-        <div className="bg-blue-50 rounded-full p-6 flex-shrink-0">
-          <ClipboardCheck className="w-12 h-12 text-[#013765]" />
+        <div className="bg-[#013765] rounded-full p-6 flex-shrink-0">
+          <ClipboardCheck className="w-12 h-12 text-white" />
         </div>
         <div className="space-y-2 text-center md:text-left">
           <h2 className="text-2xl font-bold text-gray-800">Resumen del turno</h2>
@@ -279,16 +279,19 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
       </div>
 
       {error && (
-        <div className="bg-rose-50 text-rose-500 p-4 rounded-lg border border-rose-200 space-y-2">
+        <div className="bg-rose-50 text-black p-4 rounded-lg border border-rose-200 space-y-2 text-center">
           <div>{error}</div>
           {error === "El turno seleccionado ya no está disponible. Por favor, elija otro." && (
-            <button
-              onClick={() => setStep(4)}
+            <div className="flex flex-row justify-center gap-2">
+              <button
+                onClick={() => setStep(4)}
 
-              className="mt-2 px-4 py-2 bg-[#013765] text-white rounded-xl hover:bg-blue-800 transition flex flex-row items-center space-x-2 gap-2"
-            ><CalendarSync />
-              Seleccionar otra fecha/hora.
-            </button>
+                className="mt-2 px-4 py-2 bg-[#013765] text-white rounded-xl hover:bg-blue-800 transition flex flex-row items-center space-x-2 gap-2"
+              ><CalendarSync />
+                Seleccionar otra fecha/hora.
+              </button>
+            </div>
+
           )}
         </div>
       )}

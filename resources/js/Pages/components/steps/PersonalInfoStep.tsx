@@ -163,8 +163,8 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="flex flex-col md:flex-row gap-8 items-center">
-        <div className="bg-blue-50 rounded-full p-6 flex-shrink-0">
-          <User className="w-12 h-12 text-[#013765]" />
+        <div className="bg-[#013765] rounded-full p-6 flex-shrink-0">
+          <User className="w-12 h-12 text-white" />
         </div>
         <div className="space-y-2 text-center md:text-left">
           <h2 className="text-2xl font-bold text-gray-800">Datos personales</h2>
@@ -215,13 +215,13 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
               <div className="flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-medium text-rose-800">Paciente no encontrado</h4>
-                  <p className="text-rose-700 text-sm mt-1">
+                  <h4 className="font-medium text-black">Paciente no encontrado</h4>
+                  <p className="text-black text-sm mt-1">
                     No se encontraron datos asociados a este DNI en nuestro sistema.
                   </p>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 justify-center w-full items-center">
                 <Button
                   type="button"
                   onClick={handleRegisterNew}
@@ -314,7 +314,7 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
               </div>
 
               <div className="mt-4 bg-blue-50 border border-blue-100 rounded-lg p-3 text-black text-sm flex flex-row">
-                <Info className="w-6 h-6" />
+                <Info className="w-6 h-6 text-[#013765]" />
                 <p className="ml-2">
                   Estos datos se utilizarán para confirmar su turno. Recibirá la confirmación por email y un
                   recordatorio por Whatsapp.

@@ -29,8 +29,8 @@ export default function SpecialtyStep({ specialties, data, updateData, onNext, o
   return (
     <form onSubmit={handleSubmit} className="space-y-8 min-w-0">
       <div className="flex flex-col md:flex-row gap-8 items-center">
-        <div className="bg-blue-50 rounded-full p-6 flex-shrink-0">
-          <Stethoscope className="w-12 h-12 text-[#013765]" />
+        <div className="bg-[#013765] rounded-full p-6 flex-shrink-0">
+          <Stethoscope className="w-12 h-12 text-white" />
         </div>
         <div className="space-y-2 text-center md:text-left">
           <h2 className="text-2xl font-bold text-gray-800">Seleccione especialidad</h2>

@@ -92,7 +92,7 @@ export function LandingPage({ onAccessGranted }: LandingPageProps) {
 
   return (
     <div className="lg:max-w-4xl lg:mx-auto lg:py-2">
-      
+
 
       <div className="flex flex-col justify-center items-center">
         <div className={`mb-6 bg-gray-50 border border-gray-200 rounded-lg p-6 ${isCaptchaValid ? 'hidden' : ''}`}>
@@ -107,74 +107,72 @@ export function LandingPage({ onAccessGranted }: LandingPageProps) {
         <div className="grid md:grid-cols-2 gap-6">
           {/* CARD 1 - Consultas */}
           <Card className="shadow-lg border-blue-100">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-50">
-              <CardTitle className="flex items-center gap-2 text-blue-800">
-                <Calendar className="w-6 h-6" />
-                Acceso al Sistema de Turnos Médicos
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-black">
+                <Button
+                  onClick={onAccessGranted}
+                  disabled={!isCaptchaValid}
+                  className="w-full bg-[#013765] hover:bg-blue-800 text-white py-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Ingresá aquí para turnos de consulta
+                </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6 flex flex-col gap-6">
+            <CardContent className="p-6 -mt-6 flex flex-col gap-6">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-medium text-blue-800 mb-2">Importante:</h4>
-                <ul className="text-black text-sm space-y-1">
-                  <li>• Solo permite solicitar <strong>consultas médicas</strong>.</li>
-                  <li>• No se gestionan turnos para <strong>prácticas</strong>.</li>
-                  <li>• Por favor, preséntese al menos 30 minutos antes del horario asignado <strong>para llevar a cabo la admisión correspondiente</strong>.</li>
+                <h4 className="font-medium text-black mb-2">Importante:</h4>
+                <ul className="text-black text-sm space-y-1 pl-6 list-disc">
+                  <li>Solicitá desde aquí tu turno para consultas médicas.</li>
+                  <li>Recibirás en tu mail el comprobante del turno y, 48 horas antes, en tu WhatsApp el recordatorio.</li>
+                  <li>Te esperamos 30 minutos antes del horario del turno para realizar el trámite de admisión.</li>
                 </ul>
+
               </div>
 
-              <Button
-                onClick={onAccessGranted}
-                disabled={!isCaptchaValid}
-                className="w-full bg-[#013765] hover:bg-blue-800 text-white py-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Acceder al Sistema de Consultas
-              </Button>
+
             </CardContent>
           </Card>
 
           {/* CARD 2 - Prácticas */}
           <Card className="shadow-lg border-green-100 h-full flex flex-col">
-            <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
-              <CardTitle className="flex items-center gap-2 text-green-800">
-                <MessageCircle className="w-6 h-6" />
-                ¿Necesita realizar una práctica?
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-black w-full">
+                <div className="flex flex-col gap-3 w-full">
+                  <Button
+                    onClick={openWhatsApp}
+                    disabled={!isCaptchaValid}
+                    className="w-full bg-green-500 hover:bg-green-600 text-white py-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <img
+                      src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/512px-WhatsApp.svg.png"
+                      alt="WhatsApp"
+                      width="25"
+                      height="25"
+                    />
+                    Turno para prácticas por WhatsApp
+                  </Button>
+
+                  <a href={isCaptchaValid ? "tel:2615644000" : "#"}>
+                    <button
+                      disabled={!isCaptchaValid}
+                      className="w-full rounded-md font-semibold px-4 py-2 text-lg text-white bg-[#013765] hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      📞 Turnos para práctica por teléfono
+                    </button>
+                  </a>
+                </div>
               </CardTitle>
             </CardHeader>
 
-            <CardContent className="p-6 flex flex-col flex-grow justify-between">
+            <CardContent className="p-6 flex flex-col flex-grow justify-between -mt-6">
               <div className="flex flex-col gap-4 flex-grow">
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h4 className="font-medium text-green-800 mb-2">Horarios de atención:</h4>
-                  <ul className="text-black text-sm space-y-1">
-                    <li>• Lunes a Viernes: 8:00 - 20:00</li>
-                  </ul>
+                  <p className="text-gray-700 text-sm leading-relaxed">
+                    Si necesitás turno para <strong>Diagnóstico por Imágenes, tratamientos, estudios,
+                    terapias y demás prácticas médicas</strong>, comunicate vía <strong>WhatsApp</strong> o <strong>telefónicamente</strong> con nuestro Call Center.
+                  </p>
                 </div>
-              </div>
 
-              <div className="flex flex-col gap-3 mt-6">
-                <Button
-                  onClick={openWhatsApp}
-                  disabled={!isCaptchaValid}
-                  className="w-full bg-green-500 hover:bg-green-600 text-white py-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <img
-                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/512px-WhatsApp.svg.png"
-                    alt="WhatsApp"
-                    width="25"
-                    height="25"
-                  />
-                  Solicitar práctica
-                </Button>
-
-                <a href={isCaptchaValid ? "tel:2615644000" : "#"}>
-                  <button
-                    disabled={!isCaptchaValid}
-                    className="w-full rounded-md font-semibold px-4 py-2 text-lg text-white bg-[#013765] hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    📞 Llamar al 2615644000
-                  </button>
-                </a>
               </div>
             </CardContent>
           </Card>
