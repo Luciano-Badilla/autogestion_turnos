@@ -195,6 +195,9 @@ class AppointmentForm extends Controller
             'agenda_id' => 'required|integer',
             'persona_id' => 'required|integer',
             'especialidad_id' => 'required|integer',
+            'actualizarObraSocial' => 'required|boolean',
+            'obraSocialId' => 'required',
+            'planId' => 'required',
         ]);
 
 

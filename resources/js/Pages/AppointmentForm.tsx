@@ -32,7 +32,10 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
     lastName: "",
     email: "",
     phone: "",
-    phoneCode: null
+    phoneCode: null,
+    newHealthInsuranceId: null,
+    newPlanId: null,
+    needsUpdateHealthInsurance: false
   })
 
   const totalSteps = 6
@@ -110,7 +113,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
 
   const renderStep = () => {
 
-    if (isRegistrationStep && step === 5) {
+    if (isRegistrationStep && step === 2) {
       return (
         <PatientRegistrationStep
           data={appointmentData}
@@ -137,40 +140,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
           scrollToBottomSmooth={scrollToBottomSmooth}
         />
       );*/
-
       case 2:
-        return (
-          <SpecialtyStep
-            specialties={specialties}
-            data={appointmentData}
-            updateData={updateData}
-            onNext={nextStep}
-            onBack={prevStep}
-            scrollToBottomSmooth={scrollToBottomSmooth}
-          />
-        );
-      case 3:
-        return (
-          <DoctorStep
-            data={appointmentData}
-            updateData={updateData}
-            onNext={nextStep}
-            onBack={prevStep}
-            scrollToBottomSmooth={scrollToBottomSmooth}
-
-          />
-        );
-      case 4:
-        return (
-          <DateTimeStep
-            data={appointmentData}
-            updateData={updateData}
-            onNext={nextStep}
-            onBack={prevStep}
-            scrollToBottomSmooth={scrollToBottomSmooth}
-          />
-        );
-      case 5:
         return (
           <PersonalInfoStep
             data={appointmentData}
@@ -181,6 +151,40 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
             scrollToBottomSmooth={scrollToBottomSmooth}
           />
         );
+
+      case 3:
+        return (
+          <SpecialtyStep
+            specialties={specialties}
+            data={appointmentData}
+            updateData={updateData}
+            onNext={nextStep}
+            onBack={prevStep}
+            scrollToBottomSmooth={scrollToBottomSmooth}
+          />
+        );
+      case 4:
+        return (
+          <DoctorStep
+            data={appointmentData}
+            updateData={updateData}
+            onNext={nextStep}
+            onBack={prevStep}
+            scrollToBottomSmooth={scrollToBottomSmooth}
+
+          />
+        );
+      case 5:
+        return (
+          <DateTimeStep
+            data={appointmentData}
+            updateData={updateData}
+            onNext={nextStep}
+            onBack={prevStep}
+            scrollToBottomSmooth={scrollToBottomSmooth}
+          />
+        );
+
 
       case 6:
         return (
@@ -196,6 +200,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
     }
   };
 
+  console.log(appointmentData);
   return (
     <div className="h-full w-full">
       <div className="text-center bg-[#013765] w-full py-2">
@@ -205,9 +210,9 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
       </div>
       {step === 1 && (
         <div className="text-center bg-blue-100 w-full py-4 border-b-4 border-gray-300">
-          <p className="text-center text-[#013765] text-3xl" style={{
+          <p className="text-center text-[#013765] text-3xl px-2" style={{
             fontFamily: '"Arial Unicode MS", sans-serif',
-            transform: 'scaleY(0.8)', // Achata el texto verticalmente
+            transform: 'scaleY(0.9)', // Achata el texto verticalmente
             display: 'inline-block',  // Necesario para que transform funcione bien en texto
           }}>
             Gracias por ingresar a nuestro portal de turnos.

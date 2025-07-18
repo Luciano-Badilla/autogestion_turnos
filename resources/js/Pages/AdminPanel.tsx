@@ -22,6 +22,15 @@ import {
   UserCog,
   Loader2,
 } from "lucide-react"
+import {
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+  CommandInput,
+} from "shadcn/components/ui/command"
+import { Check } from "lucide-react"
+
 
 export default function AdminPanel({ config }: { config: Record<string, any[]> }) {
   const [healthInsurances, setHealthInsurances] = useState([])
@@ -34,6 +43,8 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
   const [searchSpecialty, setSearchSpecialty] = useState("")
   const [showOnlyEnabledInsurances, setShowOnlyEnabledInsurances] = useState(false)
   const [showOnlyEnabledSpecialties, setShowOnlyEnabledSpecialties] = useState(false)
+  const [doctorAcceptedInsurances, setDoctorAcceptedInsurances] = useState<Record<number, number[]>>({})
+
 
   const sortDoctors = (doctors: any[]) =>
     [...doctors].sort((a, b) => {
@@ -154,6 +165,16 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
                 : s
             )
           )
+
+          setDoctorAcceptedInsurances(prev => {
+            const copy = { ...prev }
+            doctors.forEach(d => {
+              if (!(d.id in copy)) {
+                copy[d.id] = [] // o cargar valores guardados si los tienes
+              }
+            })
+            return copy
+          })
         } catch (err) {
           console.error("Error cargando médicos:", err)
         } finally {
@@ -381,37 +402,76 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
                           </div>
                         ) : specialty.doctors.length > 0 ? (
                           specialty.doctors.map(doctor => (
-                            <div className="flex items-center justify-between p-2 border border-gray-200 rounded-md hover:bg-gray-50" key={doctor.id}>
-                              <div className="flex items-center gap-2">
-                                {doctor.imagen_url ? (
-                                  <img
-                                    src={doctor.imagen_url}
-                                    alt="Foto de perfil"
-                                    className="w-8 h-8 rounded-full object-cover border border-gray-300"
+                            <div key={doctor.id} className="mb-2">
+                              <div className="flex items-center justify-between p-2 border border-gray-200 rounded-md hover:bg-gray-50">
+                                <div className="flex items-center gap-2">
+                                  {doctor.imagen_url ? (
+                                    <img
+                                      src={doctor.imagen_url}
+                                      alt="Foto de perfil"
+                                      className="w-8 h-8 rounded-full object-cover border border-gray-300"
+                                    />
+                                  ) : (
+                                    <UserRound className="w-6 h-6 text-gray-400" />
+                                  )}
+                                  <span>{`${doctor.apellidos ?? ""} ${doctor.nombres ?? ""}`}</span>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <Switch
+                                    checked={doctor.enabled}
+                                    onCheckedChange={() => toggleDoctor(specialty.id, doctor.id)}
                                   />
-                                ) : (
-                                  <UserRound className="w-6 h-6 text-gray-400" />
-                                )}
-                                <span>{`${doctor.apellidos ?? ""} ${doctor.nombres ?? ""}`}</span>
+                                  <label className="cursor-pointer text-sm text-blue-600 hover:underline">
+                                    Cambiar foto
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={e => handleImageUpload(e, specialty.id, doctor.id)}
+                                    />
+                                  </label>
+                                </div>
                               </div>
 
-                              <div className="flex items-center gap-2">
-                                <Switch
-                                  checked={doctor.enabled}
-                                  onCheckedChange={() => toggleDoctor(specialty.id, doctor.id)}
-                                />
-                                <label className="cursor-pointer text-sm text-blue-600 hover:underline">
-                                  Cambiar foto
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={e => handleImageUpload(e, specialty.id, doctor.id)}
-                                  />
-                                </label>
+                              {/* Aquí agrego el multiselect sin modificar el render original */}
+                              <div className="mt-2 px-3">
+                                <Command className="rounded-md border shadow-sm w-64">
+                                  <CommandInput placeholder="Buscar obras sociales..." />
+                                  <CommandList>
+                                    <CommandGroup heading="Obras sociales">
+                                      {healthInsurances
+                                        .filter(i => i.enabled)
+                                        .map(i => {
+                                          const selected = doctorAcceptedInsurances[doctor.id]?.includes(i.id)
+                                          return (
+                                            <CommandItem
+                                              key={i.id}
+                                              onSelect={() => {
+                                                setDoctorAcceptedInsurances(prev => {
+                                                  const prevList = prev[doctor.id] || []
+                                                  return {
+                                                    ...prev,
+                                                    [doctor.id]: selected
+                                                      ? prevList.filter(id => id !== i.id)
+                                                      : [...prevList, i.id],
+                                                  }
+                                                })
+                                              }}
+                                            >
+                                              <div className="flex items-center justify-between w-full">
+                                                <span>{i.nombre}</span>
+                                                {selected && <Check className="w-4 h-4 text-green-600" />}
+                                              </div>
+                                            </CommandItem>
+                                          )
+                                        })}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
                               </div>
+
                             </div>
-
                           ))
                         ) : (
                           <p className="text-center text-gray-400">

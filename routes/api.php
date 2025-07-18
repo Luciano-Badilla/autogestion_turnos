@@ -27,7 +27,7 @@ Route::post('/doctors/{doctorId}/upload-image', [AppointmentForm::class, 'upload
 
 Route::get('/dateTime/{id?}/{specialtyId?}', [AppointmentForm::class, 'getDateTimeByDoctor'])->name('getDateTimeByDoctor');
 Route::get('/personalInfo/{dni}', [AppointmentForm::class, 'getPersonalInfoByDni'])->name('getPersonalInfoByDni');
-Route::post('/turno/confirmacions', [AppointmentForm::class, 'postTurno'])->name('postTurno');
+Route::post('/turno/confirmacion', [AppointmentForm::class, 'postTurno'])->name('postTurno');
 Route::post('/person/store', [AppointmentForm::class, 'postPersona'])->name('postPersona');
 Route::post('/put/turno/{id}', [AppointmentForm::class, 'putCancelTurno']);
 Route::get('/cancelar/turno/{id}', [AppointmentForm::class, 'cancelTurnoView']);

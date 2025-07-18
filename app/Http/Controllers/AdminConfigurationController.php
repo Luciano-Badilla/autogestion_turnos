@@ -17,13 +17,15 @@ class AdminConfigurationController extends Controller
             'specialties' => 'array',
             'specialties.*.id' => 'integer',
             'specialties.*.doctors' => 'array',
-            'specialties.*.doctors.*' => 'integer',
+            'specialties.*.doctors.*.id' => 'integer',
+            'specialties.*.doctors.*.acceptedInsurances' => 'array',
+            'specialties.*.doctors.*.acceptedInsurances.*' => 'integer',
         ]);
 
         // Borrar configuraciones previas
         AdminConfiguration::truncate();
 
-        // Guardar obras sociales
+        // Guardar obras sociales generales
         foreach ($data['healthInsurances'] as $id) {
             AdminConfiguration::create([
                 'type' => 'health_insurance',
@@ -31,24 +33,33 @@ class AdminConfigurationController extends Controller
             ]);
         }
 
-        // Guardar especialidades y doctores
+        // Guardar especialidades, médicos y obras sociales aceptadas por cada médico
         foreach ($data['specialties'] as $specialty) {
             AdminConfiguration::create([
                 'type' => 'specialty',
                 'reference_id' => $specialty['id'],
             ]);
 
-            foreach ($specialty['doctors'] as $doctorId) {
+            foreach ($specialty['doctors'] as $doctor) {
                 AdminConfiguration::create([
                     'type' => 'doctor',
-                    'reference_id' => $doctorId,
+                    'reference_id' => $doctor['id'],
                     'parent_id' => $specialty['id'],
                 ]);
+
+                foreach ($doctor['acceptedInsurances'] as $insuranceId) {
+                    AdminConfiguration::create([
+                        'type' => 'doctor_insurance',
+                        'reference_id' => $insuranceId,
+                        'parent_id' => $doctor['id'],
+                    ]);
+                }
             }
         }
 
         return response()->json(['message' => 'Configuración guardada.']);
     }
+
 
     public function index()
     {

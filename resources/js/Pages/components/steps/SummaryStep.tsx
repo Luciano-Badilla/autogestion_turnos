@@ -123,8 +123,11 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
           agenda_id: data.agendaId,
           persona_id: data.personId,
           especialidad_id: data.specialtyId,
+          email: data.email,
+          actualizarObraSocial: data.needsUpdateHealthInsurance,
+          obraSocialId: data.newHealthInsuranceId,
+          planId: data.newPlanId,
           resumen_html: resumenHtml,
-          email: data.email
         })
       })
 

@@ -6,6 +6,7 @@ import { Button } from "shadcn/components/ui/button"
 import { Input } from "shadcn/components/ui/input"
 import { Label } from "shadcn/components/ui/label"
 import { AlertCircle, FileText, Mail, Phone, Search, User, UserPlus, Info } from "lucide-react"
+import { is } from "date-fns/locale"
 
 // Función que hace la llamada real a la API Laravel
 const searchPatientByDNI = async (dni: string) => {
@@ -32,7 +33,16 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
   const [phoneError, setPhoneError] = useState("")
   const [needsPhone, setNeedsPhone] = useState(false)
 
+  // Estado para la selección de obras sociales
+  const [primaryHealthInsurance, setPrimaryHealthInsurance] = useState("")
+  const [additionalHealthInsurances, setAdditionalHealthInsurances] = useState<string[]>([])
+  const [selectedHealthInsurance, setSelectedHealthInsurance] = useState("")
+
   const patientDataRef = useRef<HTMLDivElement | null>(null)
+
+  // Estado para la opción de atenderse como particular
+  const [useParticularOption, setUseParticularOption] = useState(false)
+  const [originalHealthInsurance, setOriginalHealthInsurance] = useState("")
 
   useEffect(() => {
     if (patientFound && patientDataRef.current) {
@@ -56,6 +66,16 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
     if (!phone) return "Por favor ingrese su número de celular"
     if (!/^\d{10}$/.test(phone.replace(/\D/g, ""))) return "Por favor ingrese un número de celular válido (10 dígitos)"
     return ""
+  }
+
+  const handleHealthInsuranceChange = (optionValue: string, HealthInsuranceId: BigInteger, planId: BigInteger, healthInsuranceName: string, isPrimary: boolean) => {
+    setSelectedHealthInsurance(optionValue)
+    updateData({ healthInsurance: healthInsuranceName, newHealthInsuranceId: HealthInsuranceId, newPlanId: planId })
+    if(isPrimary) {
+      updateData({ needsUpdateHealthInsurance: false })
+    }else{
+      updateData({ needsUpdateHealthInsurance: true })
+    }
   }
 
   const handleSearch = async (e) => {
@@ -100,16 +120,75 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
         personId: patientData.id,
       })
 
+
       setPatientFound(true)
+      setPrimaryHealthInsurance(patientData.obra_social)
+      setAdditionalHealthInsurances(patientData.planes_activos)
+      setSelectedHealthInsurance((patientData.obra_social == 'PARTICULAR HU COMPLETO') ? 'Particular (Sin obra social)' : patientData.obra_social)
     } catch (error) {
       console.error("Error al buscar paciente:", error)
       setNotFoundError(true)
-      updateData({ firstName: "", lastName: "", email: "", phone: "", healthInsurance: "", healthInsuranceId: "", documentNumber: "" })
+      updateData({ firstName: "", lastName: "", email: "", phone: "", healthInsurance: "", healthInsuranceId: "", documentNumber: "", newHealthInsuranceId: null, newPlanId: null })
       setPatientFound(false)
     } finally {
       setIsSearching(false)
     }
   }
+
+  const getAllHealthInsuranceOptions = () => {
+    const options = []
+
+    // Agregar obra social principal
+    if (primaryHealthInsurance && primaryHealthInsurance !== "PARTICULAR HU COMPLETO") {
+      options.push({
+        value: primaryHealthInsurance,
+        obraSocialId: primaryHealthInsurance,
+        planId: primaryHealthInsurance,
+        label: `${primaryHealthInsurance}`,
+        isPrimary: true,
+      })
+    }
+
+    // Agregar obras sociales adicionales
+    additionalHealthInsurances.forEach((insurance) => {
+      const obraSocialName = insurance.nombre_obra_social
+      const obraSocialId = insurance.obra_social_id
+      const planId = insurance.plan_id
+      const personaPlanId = insurance.persona_plan_id
+
+      options.push({
+        value: personaPlanId, // Usamos el ID como valor,
+        obraSocialId: obraSocialId,
+        planId: planId,
+        label: `${obraSocialName}`,
+        isPrimary: false,
+      })
+    })
+
+    // Siempre agregar opción particular
+    if (primaryHealthInsurance == "PARTICULAR HU COMPLETO") {
+      options.push({
+        value: "Particular (Sin obra social)",
+        obraSocialId: 100047,
+        planId: 150,
+        label: "Particular (Sin obra social)",
+        isPrimary: true,
+      })
+    } else {
+      options.push({
+        value: "Particular (Sin obra social)",
+        obraSocialId: 100047,
+        planId: 150,
+        label: "Particular (Sin obra social)",
+        isPrimary: false,
+      })
+
+    }
+
+    return options
+  }
+
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -310,6 +389,49 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
                       {data.phone}
                     </p>
                   )}
+                </div>
+                {/* Selección de Obra Social */}
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-500">Seleccione la obra social para este turno</p>
+                    <div className="space-y-2">
+                      {getAllHealthInsuranceOptions().map((option) => (
+                        <div
+                          key={option.value}
+                          className={`border rounded-lg p-3 cursor-pointer transition-all duration-200 ${selectedHealthInsurance === option.value
+                            ? "border-[#013765] bg-blue-50"
+                            : "border-gray-200 hover:border-blue-300 hover:bg-blue-25"
+                            }`}
+                          onClick={() => handleHealthInsuranceChange(option.value, option.obraSocialId, option.planId, option.label, option.isPrimary)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="radio"
+                              name="healthInsurance"
+                              value={option.value}
+                              checked={selectedHealthInsurance === option.value || selectedHealthInsurance == 'PARTICULAR HU COMPLETO'}
+                              className="h-4 w-4 text-[#013765] focus:ring-[#013765] border-gray-300"
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-gray-800">{option.label}</span>
+                                {option.isPrimary && (
+                                  <span className="bg-[#013765] text-white text-xs px-2 py-1 rounded-full">
+                                    Principal
+                                  </span>
+                                )}
+                              </div>
+                              {option.value === "Particular (Sin obra social)" && (
+                                <p className="text-sm text-gray-600 mt-1">
+                                  Mayor disponibilidad de horarios y profesionales
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
