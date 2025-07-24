@@ -118,6 +118,9 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
         healthInsuranceId: patientData.obra_social_id,
         planId: patientData.plan_id,
         personId: patientData.id,
+        needsUpdateHealthInsurance: false,
+        newHealthInsuranceId: null,
+        newPlanId: null,
       })
 
 
@@ -128,7 +131,7 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
     } catch (error) {
       console.error("Error al buscar paciente:", error)
       setNotFoundError(true)
-      updateData({ firstName: "", lastName: "", email: "", phone: "", healthInsurance: "", healthInsuranceId: "", documentNumber: "", newHealthInsuranceId: null, newPlanId: null })
+      updateData({ firstName: "", lastName: "", email: "", phone: "", healthInsurance: "", healthInsuranceId: "", documentNumber: "", newHealthInsuranceId: null, newPlanId: null, needsUpdateHealthInsurance: false })
       setPatientFound(false)
     } finally {
       setIsSearching(false)
@@ -410,6 +413,7 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
                               name="healthInsurance"
                               value={option.value}
                               checked={selectedHealthInsurance === option.value || selectedHealthInsurance == 'PARTICULAR HU COMPLETO'}
+                              onChange={() => handleHealthInsuranceChange(option.value, option.obraSocialId, option.planId, option.label, option.isPrimary)}
                               className="h-4 w-4 text-[#013765] focus:ring-[#013765] border-gray-300"
                             />
                             <div className="flex-1">
@@ -417,7 +421,7 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
                                 <span className="font-medium text-gray-800">{option.label}</span>
                                 {option.isPrimary && (
                                   <span className="bg-[#013765] text-white text-xs px-2 py-1 rounded-full">
-                                    Principal
+                                    Pricipal
                                   </span>
                                 )}
                               </div>

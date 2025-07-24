@@ -131,6 +131,12 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
         })
       })
 
+      if (response.status === 409) {
+        setError("Su obra social ya cumplió con los cupos disponibles para este turno, puede solicitar un nuevo turno como particular.")
+        setIsSubmitting(false)
+        return
+      }
+
       if (!response.ok) {
         throw new Error(`Error del servidor: ${response.statusText}`)
       }
@@ -287,11 +293,23 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
           {error === "El turno seleccionado ya no está disponible. Por favor, elija otro." && (
             <div className="flex flex-row justify-center gap-2">
               <button
-                onClick={() => setStep(4)}
+                onClick={() => setStep(5)}
 
                 className="mt-2 px-4 py-2 bg-[#013765] text-white rounded-xl hover:bg-blue-800 transition flex flex-row items-center space-x-2 gap-2"
               ><CalendarSync />
                 Seleccionar otra fecha/hora.
+              </button>
+            </div>
+
+          )}
+          {error === "Su obra social ya cumplió con los cupos disponibles para este turno, puede solicitar un nuevo turno como particular." && (
+            <div className="flex flex-row justify-center gap-2">
+              <button
+                onClick={() => setStep(2)}
+
+                className="mt-2 px-4 py-2 bg-[#013765] text-white rounded-xl hover:bg-blue-800 transition flex flex-row items-center space-x-2 gap-2"
+              ><CalendarSync />
+                Volver
               </button>
             </div>
 

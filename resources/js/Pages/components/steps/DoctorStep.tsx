@@ -24,7 +24,7 @@ export default function DoctorStep({ data, updateData, onNext, onBack, scrollToB
       try {
         // 1. Traer IDs habilitados
         const enabledDoctorsRes = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/enabled-doctors`
+          `${import.meta.env.VITE_API_BASE_URL}/api/enabled-doctors/${data.needsUpdateHealthInsurance ? data.newHealthInsuranceId : data.healthInsuranceId}`
         )
         const enabledDoctorIds: string[] = enabledDoctorsRes.data || []
 
@@ -120,17 +120,19 @@ export default function DoctorStep({ data, updateData, onNext, onBack, scrollToB
             <span className="ml-2 text-[#013765]">Cargando profesionales...</span>
           </div>
         ) : doctors.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex flex-col lg:grid lg:grid-cols-3 items-center lg:flex-wrap justify-center gap-3">
             {doctors.map((doctor) => {
               const isSelected = data.doctor === doctor.nombres + " " + doctor.apellidos
               const disabled = doctor.turnosDisponibles === 0
               return (
                 <div
                   key={doctor.id}
-                  className={`relative rounded-xl p-4 cursor-pointer transition-all duration-200 ${isSelected
+                  className={`relative rounded-xl p-4 cursor-pointer transition-all duration-200 w-full h-[120px] border flex items-center gap-4 shadow-sm
+    ${isSelected
                       ? "bg-gradient-to-br from-blue-50 to-blue-50 border-2 border-[#013765] shadow-md"
                       : "bg-white border border-gray-200 hover:border-blue-200"
-                    } ${disabled ? "opacity-50 cursor-not-allowed" : "hover:shadow-md"}`}
+                    }
+    ${disabled ? "opacity-50 cursor-not-allowed" : "hover:shadow-md"}`}
                   onClick={() => {
                     if (disabled) return;
                     updateData({
@@ -142,27 +144,23 @@ export default function DoctorStep({ data, updateData, onNext, onBack, scrollToB
                     scrollToBottomSmooth();
                   }}
                 >
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      {doctor.imagen_url ? (
-                        <img
-                          src={doctor.imagen_url}
-                          alt={`Imagen de ${doctor.nombres}`}
-                          className="w-12 h-12 object-cover rounded-full border border-gray-300"
-                          onError={(e) => {
-                            e.currentTarget.onerror = null;
-                            e.currentTarget.src = "/default-doctor.png";
-                          }}
-                        />
-                      ) : (
-                        <UserCircle className="w-12 h-12 text-[#013765]" />
-                      )}
-                      <span className="font-semibold text-gray-800">
-                        Prof. {doctor.nombres} {doctor.apellidos}
-                      </span>
-                    </div>
-                    <span className="text-[#013765] font-semibold">
-                      {doctor.turnosDisponibles} Turnos
+                  <div className="flex-shrink-0">
+                    <img
+                      src={doctor.imagen_url || "/autogestion_turnos_hu/public/storage/doctores/no_photo_uploaded.png"}
+                      alt={`Imagen de ${doctor.nombres}`}
+                      className="w-16 h-16 rounded-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/autogestion_turnos_hu/public/storage/doctores/no_photo_uploaded.png";
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex flex-col justify-center">
+                    <span className="text-sm text-gray-800 font-semibold">Dr/a</span>
+                    <span className="text-sm text-gray-800 font-semibold">{doctor.apellidos}, {doctor.nombres}</span>
+                    <span className="text-sm text-[#013765] font-semibold">
+                      Turnos disponibles: <span className="text-[#013765]">{doctor.turnosDisponibles}</span>
                     </span>
                   </div>
 
@@ -170,6 +168,7 @@ export default function DoctorStep({ data, updateData, onNext, onBack, scrollToB
                     <div className="absolute top-2 right-2 w-3 h-3 bg-[#013765] rounded-full"></div>
                   )}
                 </div>
+
               )
             })}
           </div>

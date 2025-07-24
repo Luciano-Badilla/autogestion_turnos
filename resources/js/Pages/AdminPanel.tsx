@@ -29,10 +29,15 @@ import {
   CommandList,
   CommandInput,
 } from "shadcn/components/ui/command"
-import { Check } from "lucide-react"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "shadcn/components/ui/popover"
+import { Check, ChevronsUpDown } from "lucide-react"
 
 
-export default function AdminPanel({ config }: { config: Record<string, any[]> }) {
+export default function AdminPanel({ config, user_role, user_role_name }: { config: Record<string, any[]>, user_role: number, user_role_name: string }) {
   const [healthInsurances, setHealthInsurances] = useState([])
   const [specialties, setSpecialties] = useState([])
   const [openSpecialties, setOpenSpecialties] = useState<number[]>([])
@@ -44,6 +49,10 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
   const [showOnlyEnabledInsurances, setShowOnlyEnabledInsurances] = useState(false)
   const [showOnlyEnabledSpecialties, setShowOnlyEnabledSpecialties] = useState(false)
   const [doctorAcceptedInsurances, setDoctorAcceptedInsurances] = useState<Record<number, number[]>>({})
+  const [openHealthInsurances, setOpenHealthInsurances] = useState<number[]>([]);
+  const [loadingPlans, setLoadingPlans] = useState<number[]>([]);
+  const [healthInsurancePlans, setHealthInsurancePlans] = useState<{ [key: number]: string[] }>({});
+  const [enabledPlans, setEnabledPlans] = useState<{ [healthInsuranceId: number]: number[] }>({})
 
 
   const sortDoctors = (doctors: any[]) =>
@@ -52,6 +61,44 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
       const nameB = `${b.apellidos ?? ""} ${b.nombres ?? ""}`.toLowerCase()
       return nameA.localeCompare(nameB)
     })
+
+
+  const toggleHealthInsuranceCollapse = async (id: number) => {
+    const isOpen = openHealthInsurances.includes(id);
+
+    if (isOpen) {
+      setOpenHealthInsurances(prev => prev.filter(openId => openId !== id));
+    } else {
+      setOpenHealthInsurances(prev => [...prev, id]);
+
+      if (!healthInsurancePlans[id]) {
+        setLoadingPlans(prev => [...prev, id]);
+
+        try {
+          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/planes/${id}`); // <-- async/await permitidos porque la función es async
+          const data = await res.json();
+          setHealthInsurancePlans(prev => ({ ...prev, [id]: data }));
+
+          setEnabledPlans(prev => {
+            if (prev[id]) return prev; // ya está seteado
+            const enabledFromConfig = config?.plan
+              ?.find(hp => hp.health_insurance_id === id)
+              ?.plans?.map(p => p.id) || [];
+
+            return {
+              ...prev,
+              [id]: enabledFromConfig
+            };
+          });
+
+        } catch (error) {
+          console.error("Error cargando planes", error);
+        } finally {
+          setLoadingPlans(prev => prev.filter(pid => pid !== id));
+        }
+      }
+    }
+  }
 
   useEffect(() => {
     const loadData = async () => {
@@ -69,6 +116,7 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
           id: s.value,
           doctors: s.meta?.doctors || [],
         })) || []
+
 
         const updatedInsurances = healthInsurancesData.map(i => ({
           ...i,
@@ -169,12 +217,15 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
           setDoctorAcceptedInsurances(prev => {
             const copy = { ...prev }
             doctors.forEach(d => {
-              if (!(d.id in copy)) {
-                copy[d.id] = [] // o cargar valores guardados si los tienes
-              }
+              const doctorId = d.id
+              const accepted = config?.doctor_insurance
+                ?.filter(i => Number(i.parent_id) === doctorId)
+                ?.map(i => Number(i.reference_id)) ?? []
+              copy[doctorId] = accepted
             })
             return copy
           })
+
         } catch (err) {
           console.error("Error cargando médicos:", err)
         } finally {
@@ -192,7 +243,12 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
         .filter(s => s.enabled)
         .map(s => ({
           id: s.id,
-          doctors: s.doctors.filter(d => d.enabled).map(d => d.id),
+          doctors: s.doctors
+            .filter(d => d.enabled)
+            .map(d => ({
+              id: d.id,
+              acceptedInsurances: doctorAcceptedInsurances[d.id] || [],
+            })),
         }))
 
       await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/sync/save`, {
@@ -201,17 +257,22 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
         body: JSON.stringify({
           healthInsurances: selectedHealthInsurances.map(h => h.id),
           specialties: selectedSpecialties,
+          healthInsurancePlans: Object.entries(enabledPlans).map(([healthInsuranceId, plans]) => ({
+            health_insurance_id: Number(healthInsuranceId),
+            plans: plans.map(planId => ({ id: planId })),
+          })),
         }),
       })
 
-      toast.success("Configuración guardada exitosamente");
-
+      toast.success("Configuración guardada exitosamente")
     } catch (error) {
       alert("Error al guardar la configuración")
     } finally {
       setIsSaving(false)
     }
   }
+
+
 
   const handleImageUpload = async (
     e,
@@ -281,7 +342,7 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold text-blue-800 mb-2 flex items-center justify-center gap-3">
-            <UserCog className="w-10 h-10" /> Panel de Administración
+            <UserCog className="w-10 h-10" /> Panel de Administración - Rol: {user_role_name}
           </h1>
         </div>
 
@@ -321,16 +382,74 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
             <CardContent className="p-6 space-y-4 overflow-auto">
               {filteredHealthInsurances.length > 0 ? (
                 filteredHealthInsurances.map(insurance => (
-                  <div
-                    key={insurance.id}
-                    className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:bg-gray-200"
-                  >
-                    <span className="font-medium text-gray-800">{insurance.nombre}</span>
-                    <Switch
-                      checked={insurance.enabled}
-                      onCheckedChange={() => toggleHealthInsurance(insurance.id)}
-                    />
+                  <div key={insurance.id} className="border border-gray-200 rounded-md">
+                    <button
+                      className="w-full flex items-center justify-between p-3 hover:bg-gray-200 rounded-t-md"
+                      onClick={() => toggleHealthInsuranceCollapse(insurance.id)}
+                    >
+                      <div className="flex items-center gap-2">
+                        {openHealthInsurances.includes(insurance.id) ? (
+                          <ChevronDown className="w-5 h-5" />
+                        ) : (
+                          <ChevronRight className="w-5 h-5" />
+                        )}
+                        <span className="font-semibold text-gray-800">{insurance.nombre}</span>
+                      </div>
+                      <Switch
+                        checked={insurance.enabled}
+                        onCheckedChange={() => toggleHealthInsurance(insurance.id)}
+                        onClick={e => e.stopPropagation()}
+                        disabled={user_role !== 1}
+                      />
+                    </button>
+
+                    {openHealthInsurances.includes(insurance.id) && (
+                      <div className="p-3 space-y-2 border-t border-gray-300 overflow-auto">
+                        {loadingPlans.includes(insurance.id) ? (
+                          <div className="flex items-center justify-center p-4">
+                            <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                            <span className="ml-2 text-blue-600">Cargando planes...</span>
+                          </div>
+                        ) : healthInsurancePlans[insurance.id]?.length > 0 ? (
+                          <ul className="list-disc list-inside text-gray-700 space-y-1">
+                            {healthInsurancePlans[insurance.id].map((plan: { id: number; nombre: string }) => {
+                              const isEnabled = enabledPlans[insurance.id]?.includes(plan.id)
+                              return (
+                                <li key={plan.id} className="flex items-center justify-between px-2 gap-2">
+                                  <span>{plan.nombre}</span>
+                                  <Switch
+                                    checked={isEnabled}
+                                    disabled={user_role !== 1}
+                                    onCheckedChange={() => {
+                                      setEnabledPlans(prev => {
+                                        const currentPlans = prev[insurance.id] || []
+                                        if (isEnabled) {
+                                          // deshabilitar plan
+                                          return {
+                                            ...prev,
+                                            [insurance.id]: currentPlans.filter(pid => pid !== plan.id),
+                                          }
+                                        } else {
+                                          // habilitar plan
+                                          return {
+                                            ...prev,
+                                            [insurance.id]: [...currentPlans, plan.id],
+                                          }
+                                        }
+                                      })
+                                    }}
+                                  />
+                                </li>
+                              )
+                            })}
+                          </ul>
+                        ) : (
+                          <p className="text-center text-gray-400">No hay planes disponibles.</p>
+                        )}
+                      </div>
+                    )}
                   </div>
+
                 ))
               ) : (
                 <p className="text-center text-gray-400">No se encontraron obras sociales.</p>
@@ -390,6 +509,7 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
                         checked={specialty.enabled}
                         onCheckedChange={() => toggleSpecialty(specialty.id)}
                         onClick={e => e.stopPropagation()}
+                        disabled={user_role !== 1}
                       />
                     </button>
 
@@ -402,7 +522,7 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
                           </div>
                         ) : specialty.doctors.length > 0 ? (
                           specialty.doctors.map(doctor => (
-                            <div key={doctor.id} className="mb-2">
+                            <div key={doctor.id} className="mb-2 border border-gray-250 bg-gray-50 p-1 rounded-lg">
                               <div className="flex items-center justify-between p-2 border border-gray-200 rounded-md hover:bg-gray-50">
                                 <div className="flex items-center gap-2">
                                   {doctor.imagen_url ? (
@@ -421,6 +541,7 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
                                   <Switch
                                     checked={doctor.enabled}
                                     onCheckedChange={() => toggleDoctor(specialty.id, doctor.id)}
+                                    disabled={user_role !== 1}
                                   />
                                   <label className="cursor-pointer text-sm text-blue-600 hover:underline">
                                     Cambiar foto
@@ -435,41 +556,59 @@ export default function AdminPanel({ config }: { config: Record<string, any[]> }
                               </div>
 
                               {/* Aquí agrego el multiselect sin modificar el render original */}
-                              <div className="mt-2 px-3">
-                                <Command className="rounded-md border shadow-sm w-64">
-                                  <CommandInput placeholder="Buscar obras sociales..." />
-                                  <CommandList>
-                                    <CommandGroup heading="Obras sociales">
-                                      {healthInsurances
-                                        .filter(i => i.enabled)
-                                        .map(i => {
-                                          const selected = doctorAcceptedInsurances[doctor.id]?.includes(i.id)
-                                          return (
-                                            <CommandItem
-                                              key={i.id}
-                                              onSelect={() => {
-                                                setDoctorAcceptedInsurances(prev => {
-                                                  const prevList = prev[doctor.id] || []
-                                                  return {
-                                                    ...prev,
-                                                    [doctor.id]: selected
-                                                      ? prevList.filter(id => id !== i.id)
-                                                      : [...prevList, i.id],
-                                                  }
-                                                })
-                                              }}
-                                            >
-                                              <div className="flex items-center justify-between w-full">
-                                                <span>{i.nombre}</span>
-                                                {selected && <Check className="w-4 h-4 text-green-600" />}
-                                              </div>
-                                            </CommandItem>
-                                          )
-                                        })}
-                                    </CommandGroup>
-                                  </CommandList>
-                                </Command>
+                              <div className="mt-1 px-3 w-full">
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      role="combobox"
+                                      disabled={user_role !== 1}
+                                      className="w-64 justify-between"
+                                    >
+                                      {doctorAcceptedInsurances[doctor.id]?.length
+                                        ? `${doctorAcceptedInsurances[doctor.id].length} obras sociales seleccionadas`
+                                        : "Seleccionar obras sociales"}
+                                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-64 p-0">
+                                    <Command>
+                                      <CommandInput placeholder="Buscar..." className="h-9" />
+                                      <CommandList>
+                                        <CommandGroup>
+                                          {healthInsurances
+                                            .filter(i => i.enabled)
+                                            .map(i => {
+                                              const selected = doctorAcceptedInsurances[doctor.id]?.includes(i.id)
+                                              return (
+                                                <CommandItem
+                                                  key={i.id}
+                                                  onSelect={() => {
+                                                    setDoctorAcceptedInsurances(prev => {
+                                                      const prevList = prev[doctor.id] || []
+                                                      return {
+                                                        ...prev,
+                                                        [doctor.id]: selected
+                                                          ? prevList.filter(id => id !== i.id)
+                                                          : [...prevList, i.id],
+                                                      }
+                                                    })
+                                                  }}
+                                                >
+                                                  <div className="flex items-center justify-between w-full">
+                                                    <span>{i.nombre}</span>
+                                                    {selected && <Check className="w-4 h-4 text-green-600" />}
+                                                  </div>
+                                                </CommandItem>
+                                              )
+                                            })}
+                                        </CommandGroup>
+                                      </CommandList>
+                                    </Command>
+                                  </PopoverContent>
+                                </Popover>
                               </div>
+
 
                             </div>
                           ))

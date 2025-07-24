@@ -148,7 +148,6 @@ class AppointmentForm extends Controller
             return $doctor;
         });
 
-
         return response()->json($doctors);
     }
 
@@ -187,6 +186,7 @@ class AppointmentForm extends Controller
         $resumenHtml = $request->input('resumen_html');
         $email = $request->input('email');
         $data = $request->input('data');
+        Log::info($request->all());
 
         $validated = $request->validate([
             'hora' => 'required|string',
@@ -196,10 +196,9 @@ class AppointmentForm extends Controller
             'persona_id' => 'required|integer',
             'especialidad_id' => 'required|integer',
             'actualizarObraSocial' => 'required|boolean',
-            'obraSocialId' => 'required',
-            'planId' => 'required',
+            'obraSocialId' => 'nullable',
+            'planId' => 'nullable',
         ]);
-
 
         $response = Http::withHeaders([
             ENV('API_HEADER') => ENV('API_PASS')

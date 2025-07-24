@@ -22,7 +22,7 @@ return new class extends Migration
             $table->timestamps(); // Timestamps (created_at, updated_at)
             $table->binary('validated')->default(0); // Validado (0 o 1)
             $table->binary('requestsPassword')->default(0); // Solicitar contraseña (0 o 1)
-
+            $table->integer('role_id');
         });
 
         // Crear la tabla 'password_reset_tokens'.

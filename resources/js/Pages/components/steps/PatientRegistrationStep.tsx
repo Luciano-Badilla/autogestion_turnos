@@ -160,6 +160,8 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
     return Object.values(newErrors).every((error) => error === "")
   }
 
+  const [error, setError] = useState("");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -189,7 +191,8 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
 
       const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/person/store`, payload)
 
-      const personaId = response?.data?.data?.id
+      const personaId = response?.data?.respuesta?.data?.id
+      console.log(response?.data?.respuesta?.data?.id);
 
       if (personaId) {
         updateData({ personId: personaId })  // Guardar el ID en el estado del formulario
@@ -198,12 +201,12 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
         console.error("No se recibió un ID de persona válido:", response.data)
       }
 
-      console.log("Paciente registrado:", response.data)
       onNext()
 
     } catch (error) {
-      console.error("Error al registrar paciente:", error)
-      alert("Ocurrió un error al registrar el paciente. Intente nuevamente.")
+      if (error.response.status == 409) {
+        setError("El paciente ya existe.")
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -270,12 +273,19 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
     setIsLoadingPlanes(true);
 
     try {
-      const [planesResponse] = await Promise.all([
+      const [planesResponse, enabledPlansResponse] = await Promise.all([
         axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/planes/${id}`),
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/enabled-plans/${id}`),
       ]);
-      setPlanes(planesResponse.data);
+      
+      const all = planesResponse.data;
+      const enabled = enabledPlansResponse.data;
+      
+      // Filtrar las habilitadas
+      const filtered = all.filter(h => enabled.includes(h.id));
+      setPlanes(filtered);
       setIsLoadingPlanes(false);
-
+      
     } catch (error) {
       console.error('Error cargando datos:', error);
     }
@@ -285,8 +295,8 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="flex flex-col md:flex-row gap-8 items-center">
-        <div className="bg-blue-50 rounded-full p-6 flex-shrink-0">
-          <UserPlus className="w-12 h-12 text-[#013765]" />
+        <div className="bg-[#013765] rounded-full p-6 flex-shrink-0">
+          <UserPlus className="w-12 h-12 text-white" />
         </div>
         <div className="space-y-2 text-center md:text-left">
           <h2 className="text-2xl font-bold text-gray-800">Registro de nuevo paciente</h2>
@@ -334,7 +344,8 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
               placeholder="Ej: 12345678"
               value={data.documentNumber}
               onChange={(e) => updateData({ documentNumber: e.target.value })}
-              className="h-12 border-gray-300 focus:border-[#013765] focus:ring-[#013765]"
+              className="h-12 border-gray-300 focus:border-gray-300 focus:ring-gray-300 bg-gray-100"
+              readOnly
             />
             {errors.documentNumber && <p className="text-rose-500 text-sm">{errors.documentNumber}</p>}
           </div>
@@ -460,6 +471,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
                     updateData({
                       healthInsuranceId: selected.id.toString(),
                       healthInsurance: selected.nombre,
+                      planId: null
                     });
                     handleHealthInsuranceChange(selected.id.toString());
                   }
@@ -541,6 +553,25 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
             Recibirá confirmaciones por email y recordatorios por Whatsapp.
           </p>
         </div>
+        {error && (
+          <div className="mt-6 flex items-center justify-center">
+            <div className="bg-red-100 border border-red-400 text-black rounded-lg px-6 py-4 w-full max-w-md shadow-sm flex items-start gap-3">
+              <svg
+                className="w-5 h-5 mt-1 flex-shrink-0 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-.01-10a9 9 0 11-9 9 9 9 0 019-9z" />
+              </svg>
+              <p className="text-sm font-medium">
+                Este paciente ya se encuentra registrado en el sistema. Verificá el DNI.
+              </p>
+            </div>
+          </div>
+        )}
+
       </div>
 
       <div className="flex justify-between">

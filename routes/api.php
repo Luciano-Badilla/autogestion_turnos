@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminPanel;
 use App\Http\Controllers\AppointmentForm;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\HealthinsurancesController;
+use App\Http\Controllers\plansController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -31,9 +32,11 @@ Route::post('/turno/confirmacion', [AppointmentForm::class, 'postTurno'])->name(
 Route::post('/person/store', [AppointmentForm::class, 'postPersona'])->name('postPersona');
 Route::post('/put/turno/{id}', [AppointmentForm::class, 'putCancelTurno']);
 Route::get('/cancelar/turno/{id}', [AppointmentForm::class, 'cancelTurnoView']);
+
 // routes/api.php
-Route::get('/enabled-doctors', [DoctorController::class, 'getEnabledDoctors']);
+Route::get('/enabled-doctors/{idHealtInsurance?}', [DoctorController::class, 'getEnabledDoctors']);
 Route::get('/enabled-healthinsurances', [HealthinsurancesController::class, 'getEnabledhealthinsurances']);
+Route::get('/enabled-plans/{idHealthInsurance?}', [plansController::class, 'getEnabledPlans']);
 
 Route::post('/admin/sync/save', [AdminConfigurationController::class, 'store']);
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
