@@ -34,7 +34,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "shadcn/components/ui/popover"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, LogOut } from "lucide-react"
 
 
 export default function AdminPanel({ config, user_role, user_role_name }: { config: Record<string, any[]>, user_role: number, user_role_name: string }) {
@@ -250,11 +250,16 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
               acceptedInsurances: doctorAcceptedInsurances[d.id] || [],
             })),
         }))
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/sanctum/csrf-cookie`, {
+        credentials: "include",
+      });
 
       await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/sync/save`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          user_role: user_role,
           healthInsurances: selectedHealthInsurances.map(h => h.id),
           specialties: selectedSpecialties,
           healthInsurancePlans: Object.entries(enabledPlans).map(([healthInsuranceId, plans]) => ({
@@ -315,6 +320,10 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
     }
   }
 
+  const role = (roles: Array) => {
+    return roles.includes(user_role);
+  }
+
 
   const getEnabledCount = (items: { enabled: boolean }[]) => items.filter(i => i.enabled).length
 
@@ -337,6 +346,10 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
     )
   }
 
+  const logout = () => {
+    window.location.href = `${import.meta.env.VITE_APP_URL}/logout`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 py-8 px-4">
       <div className="max-w-6xl mx-auto">
@@ -344,121 +357,129 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
           <h1 className="text-4xl font-bold text-blue-800 mb-2 flex items-center justify-center gap-3">
             <UserCog className="w-10 h-10" /> Panel de Administración - Rol: {user_role_name}
           </h1>
+          <Button className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 h-auto rounded-xl shadow-md hover:shadow-lg transition-all duration-200" onClick={logout}>
+            <LogOut className="w-6 h-6" />
+            Cerrar sesión
+          </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[75vh]">
-          {/* Obras Sociales */}
-          <Card className="shadow-lg border-blue-100 flex flex-col h-[75vh]">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-50">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-blue-800">
-                  <Shield className="w-6 h-6" /> Obras Sociales
-                </CardTitle>
-                <div className="mt-2 flex items-center gap-2">
-                  <Switch
-                    checked={showOnlyEnabledInsurances}
-                    onCheckedChange={setShowOnlyEnabledInsurances}
-                  />
-                  <span className="text-sm font-semibold text-gray-700">Mostrar solo activas</span>
-                </div>
-              </div>
-              <CardDescription className="font-semibold">
-                Seleccione las obras sociales disponibles cuando un paciente nuevo se registre.
-              </CardDescription>
-              <Badge variant="secondary" className="w-fit bg-gray-200">
-                {getEnabledCount(healthInsurances)} de {healthInsurances.length} activas
-              </Badge>
+        <div className="flex flex-row gap-8 min-h-[75vh] w-full">
+          { /* Obras Sociales */}
+          {role([1, 3]) && (
 
-            </CardHeader>
-            <div className="px-6 pt-4">
-              <input
-                type="text"
-                placeholder="Buscar obra social..."
-                className="w-full rounded-md border border-gray-300 px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                value={searchHealthInsurance}
-                onChange={e => setSearchHealthInsurance(e.target.value)}
-              />
-            </div>
-            <CardContent className="p-6 space-y-4 overflow-auto">
-              {filteredHealthInsurances.length > 0 ? (
-                filteredHealthInsurances.map(insurance => (
-                  <div key={insurance.id} className="border border-gray-200 rounded-md">
-                    <button
-                      className="w-full flex items-center justify-between p-3 hover:bg-gray-200 rounded-t-md"
-                      onClick={() => toggleHealthInsuranceCollapse(insurance.id)}
-                    >
-                      <div className="flex items-center gap-2">
-                        {openHealthInsurances.includes(insurance.id) ? (
-                          <ChevronDown className="w-5 h-5" />
-                        ) : (
-                          <ChevronRight className="w-5 h-5" />
-                        )}
-                        <span className="font-semibold text-gray-800">{insurance.nombre}</span>
-                      </div>
-                      <Switch
-                        checked={insurance.enabled}
-                        onCheckedChange={() => toggleHealthInsurance(insurance.id)}
-                        onClick={e => e.stopPropagation()}
-                        disabled={user_role !== 1}
-                      />
-                    </button>
-
-                    {openHealthInsurances.includes(insurance.id) && (
-                      <div className="p-3 space-y-2 border-t border-gray-300 overflow-auto">
-                        {loadingPlans.includes(insurance.id) ? (
-                          <div className="flex items-center justify-center p-4">
-                            <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-                            <span className="ml-2 text-blue-600">Cargando planes...</span>
-                          </div>
-                        ) : healthInsurancePlans[insurance.id]?.length > 0 ? (
-                          <ul className="list-disc list-inside text-gray-700 space-y-1">
-                            {healthInsurancePlans[insurance.id].map((plan: { id: number; nombre: string }) => {
-                              const isEnabled = enabledPlans[insurance.id]?.includes(plan.id)
-                              return (
-                                <li key={plan.id} className="flex items-center justify-between px-2 gap-2">
-                                  <span>{plan.nombre}</span>
-                                  <Switch
-                                    checked={isEnabled}
-                                    disabled={user_role !== 1}
-                                    onCheckedChange={() => {
-                                      setEnabledPlans(prev => {
-                                        const currentPlans = prev[insurance.id] || []
-                                        if (isEnabled) {
-                                          // deshabilitar plan
-                                          return {
-                                            ...prev,
-                                            [insurance.id]: currentPlans.filter(pid => pid !== plan.id),
-                                          }
-                                        } else {
-                                          // habilitar plan
-                                          return {
-                                            ...prev,
-                                            [insurance.id]: [...currentPlans, plan.id],
-                                          }
-                                        }
-                                      })
-                                    }}
-                                  />
-                                </li>
-                              )
-                            })}
-                          </ul>
-                        ) : (
-                          <p className="text-center text-gray-400">No hay planes disponibles.</p>
-                        )}
-                      </div>
-                    )}
+            <Card className="shadow-lg border-blue-100 flex flex-col h-[75vh] w-full">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-50">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-blue-800">
+                    <Shield className="w-6 h-6" /> Obras Sociales
+                  </CardTitle>
+                  <div className="mt-2 flex items-center gap-2">
+                    <Switch
+                      checked={showOnlyEnabledInsurances}
+                      onCheckedChange={setShowOnlyEnabledInsurances}
+                    />
+                    <span className="text-sm font-semibold text-gray-700">Mostrar solo activas</span>
                   </div>
+                </div>
+                <CardDescription className="font-semibold">
+                  Seleccione las obras sociales disponibles cuando un paciente nuevo se registre.
+                </CardDescription>
+                <Badge variant="secondary" className="w-fit bg-gray-200">
+                  {getEnabledCount(healthInsurances)} de {healthInsurances.length} activas
+                </Badge>
 
-                ))
-              ) : (
-                <p className="text-center text-gray-400">No se encontraron obras sociales.</p>
-              )}
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <div className="px-6 pt-4">
+                <input
+                  type="text"
+                  placeholder="Buscar obra social..."
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  value={searchHealthInsurance}
+                  onChange={e => setSearchHealthInsurance(e.target.value)}
+                />
+              </div>
+              <CardContent className="p-6 space-y-4 overflow-auto">
+                {filteredHealthInsurances.length > 0 ? (
+                  filteredHealthInsurances.map(insurance => (
+                    <div key={insurance.id} className="border border-gray-200 rounded-md">
+                      <button
+                        className="w-full flex items-center justify-between p-3 hover:bg-gray-200 rounded-t-md"
+                        onClick={() => toggleHealthInsuranceCollapse(insurance.id)}
+                      >
+                        <div className="flex items-center gap-2">
+                          {openHealthInsurances.includes(insurance.id) ? (
+                            <ChevronDown className="w-5 h-5" />
+                          ) : (
+                            <ChevronRight className="w-5 h-5" />
+                          )}
+                          <span className="font-semibold text-gray-800">{insurance.nombre}</span>
+                        </div>
+                        <Switch
+                          checked={insurance.enabled}
+                          onCheckedChange={() => toggleHealthInsurance(insurance.id)}
+                          onClick={e => e.stopPropagation()}
+                          disabled={!role([1, 3])}
+                        />
+                      </button>
+
+                      {openHealthInsurances.includes(insurance.id) && (
+                        <div className="p-3 space-y-2 border-t border-gray-300 overflow-auto">
+                          {loadingPlans.includes(insurance.id) ? (
+                            <div className="flex items-center justify-center p-4">
+                              <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                              <span className="ml-2 text-blue-600">Cargando planes...</span>
+                            </div>
+                          ) : healthInsurancePlans[insurance.id]?.length > 0 ? (
+                            <ul className="list-disc list-inside text-gray-700 space-y-1">
+                              {healthInsurancePlans[insurance.id].map((plan: { id: number; nombre: string }) => {
+                                const isEnabled = enabledPlans[insurance.id]?.includes(plan.id)
+                                return (
+                                  <li key={plan.id} className="flex items-center justify-between px-2 gap-2">
+                                    <span>{plan.nombre}</span>
+                                    <Switch
+                                      checked={isEnabled}
+                                      disabled={!role([1, 3])}
+                                      onCheckedChange={() => {
+                                        setEnabledPlans(prev => {
+                                          const currentPlans = prev[insurance.id] || []
+                                          if (isEnabled) {
+                                            // deshabilitar plan
+                                            return {
+                                              ...prev,
+                                              [insurance.id]: currentPlans.filter(pid => pid !== plan.id),
+                                            }
+                                          } else {
+                                            // habilitar plan
+                                            return {
+                                              ...prev,
+                                              [insurance.id]: [...currentPlans, plan.id],
+                                            }
+                                          }
+                                        })
+                                      }}
+                                    />
+                                  </li>
+                                )
+                              })}
+                            </ul>
+                          ) : (
+                            <p className="text-center text-gray-400">No hay planes disponibles.</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                  ))
+                ) : (
+                  <p className="text-center text-gray-400">No se encontraron obras sociales.</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
 
           {/* Especialidades */}
-          <Card className="shadow-lg border-blue-100 flex flex-col h-[75vh]">
+          {role([1, 2, 4]) && (<Card className="shadow-lg border-blue-100 flex flex-col h-[75vh] w-full">
             <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-50">
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-blue-800">
@@ -509,7 +530,7 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
                         checked={specialty.enabled}
                         onCheckedChange={() => toggleSpecialty(specialty.id)}
                         onClick={e => e.stopPropagation()}
-                        disabled={user_role !== 1}
+                        disabled={!role([1, 4])}
                       />
                     </button>
 
@@ -541,7 +562,7 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
                                   <Switch
                                     checked={doctor.enabled}
                                     onCheckedChange={() => toggleDoctor(specialty.id, doctor.id)}
-                                    disabled={user_role !== 1}
+                                    disabled={!role([1, 4])}
                                   />
                                   <label className="cursor-pointer text-sm text-blue-600 hover:underline">
                                     Cambiar foto
@@ -562,7 +583,7 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
                                     <Button
                                       variant="outline"
                                       role="combobox"
-                                      disabled={user_role !== 1}
+                                      disabled={!role([1, 4])}
                                       className="w-64 justify-between"
                                     >
                                       {doctorAcceptedInsurances[doctor.id]?.length
@@ -625,10 +646,11 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
                 <p className="text-center text-gray-400">No se encontraron especialidades.</p>
               )}
             </CardContent>
-          </Card>
+          </Card>)}
+
         </div>
 
-        <div className="mt-8 flex justify-center">
+        <div className={`mt-8 flex justify-center ${role([2]) ? "hidden" : ""}`}>
           <Button
             className="bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 text-white px-8 py-3 h-auto rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
             onClick={handleSave}

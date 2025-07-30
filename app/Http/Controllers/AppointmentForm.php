@@ -50,7 +50,7 @@ class AppointmentForm extends Controller
     public function getHealthInsurances()
     {
         $response = Http::timeout(60)->withHeaders([
-            ENV('API_HEADER') => ENV('API_PASS')
+            'X-API-KEY' => ENV('API_PASS')
         ])->get('http://172.22.118.101:81/apiturnos/public/api/v1/obrasocial');
 
         if ($response->successful()) {

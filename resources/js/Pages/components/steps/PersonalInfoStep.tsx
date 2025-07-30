@@ -421,14 +421,13 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
                                 <span className="font-medium text-gray-800">{option.label}</span>
                                 {option.isPrimary && (
                                   <span className="bg-[#013765] text-white text-xs px-2 py-1 rounded-full">
-                                    Pricipal
+                                    Principal
                                   </span>
                                 )}
                               </div>
                               {option.value === "Particular (Sin obra social)" && (
                                 <p className="text-sm text-gray-600 mt-1">
-                                  Mayor disponibilidad de horarios y profesionales
-                                </p>
+                                 </p>
                               )}
                             </div>
                           </div>

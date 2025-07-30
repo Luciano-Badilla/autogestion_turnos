@@ -57,7 +57,7 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
   const [filteredHealthInsurances, setFilteredHealthInsurances] = useState([]);
   const [planes, setPlanes] = useState([]);
   const [isLoadingPlanes, setIsLoadingPlanes] = useState(false);
-
+  console.log(planes);
   // Función para actualizar la fecha completa cuando cambia algún componente
   const updateBirthDate = (day: string, month: string, year: string) => {
     if (day && month && year) {
@@ -192,7 +192,6 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
       const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/person/store`, payload)
 
       const personaId = response?.data?.respuesta?.data?.id
-      console.log(response?.data?.respuesta?.data?.id);
 
       if (personaId) {
         updateData({ personId: personaId })  // Guardar el ID en el estado del formulario
@@ -277,15 +276,15 @@ export default function PatientRegistrationStep({ data, updateData, onNext, onBa
         axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/planes/${id}`),
         axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/enabled-plans/${id}`),
       ]);
-      
+
       const all = planesResponse.data;
       const enabled = enabledPlansResponse.data;
-      
+
       // Filtrar las habilitadas
       const filtered = all.filter(h => enabled.includes(h.id));
       setPlanes(filtered);
       setIsLoadingPlanes(false);
-      
+
     } catch (error) {
       console.error('Error cargando datos:', error);
     }

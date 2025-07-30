@@ -200,7 +200,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
     }
   };
 
-  console.log(appointmentData);
+  //console.log(appointmentData);
   return (
     <div className="h-full w-full">
       <div className="text-center bg-[#013765] w-full py-2">

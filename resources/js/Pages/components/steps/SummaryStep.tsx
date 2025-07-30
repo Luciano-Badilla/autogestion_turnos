@@ -14,6 +14,11 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState("")
+  const openWhatsApp = () => {
+    const phoneNumber = "5492612053408" // Reemplazar con el número real
+    const whatsappUrl = `https://wa.me/${phoneNumber}`
+    window.open(whatsappUrl, "_blank")
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -288,34 +293,68 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
       </div>
 
       {error && (
-        <div className="bg-rose-50 text-black p-4 rounded-lg border border-rose-200 space-y-2 text-center">
-          <div>{error}</div>
+        <div className="bg-red-50 border border-red-200 p-6 rounded-xl shadow-md text-center space-y-4 animate-fade-in">
+          <div className="text-gray-700 text-base">
+            {error === "El turno seleccionado ya no está disponible. Por favor, elija otro."
+              ? "El turno que seleccionaste ya no está disponible. Te invitamos a elegir otra fecha u horario."
+              : error === "Su obra social ya cumplió con los cupos disponibles para este turno, puede solicitar un nuevo turno como particular."
+                ? "Tuvimos un inconveniente al procesar tu turno. Por favor, contactanos por WhatsApp o por teléfono para ayudarte personalmente."
+                : error
+            }
+          </div>
+
           {error === "El turno seleccionado ya no está disponible. Por favor, elija otro." && (
-            <div className="flex flex-row justify-center gap-2">
+            <div className="flex justify-center">
               <button
+                type="button"
                 onClick={() => setStep(5)}
-
-                className="mt-2 px-4 py-2 bg-[#013765] text-white rounded-xl hover:bg-blue-800 transition flex flex-row items-center space-x-2 gap-2"
-              ><CalendarSync />
-                Seleccionar otra fecha/hora.
+                className="bg-[#013765] hover:bg-blue-800 text-white px-5 py-2 rounded-lg flex items-center gap-2 transition"
+              >
+                <CalendarSync />
+                Seleccionar otra fecha/hora
               </button>
             </div>
-
           )}
+
           {error === "Su obra social ya cumplió con los cupos disponibles para este turno, puede solicitar un nuevo turno como particular." && (
-            <div className="flex flex-row justify-center gap-2">
-              <button
-                onClick={() => setStep(2)}
+            <div className="flex flex-col md:flex-row justify-center gap-4 text-center">
+              <Button
+                onClick={openWhatsApp}
+                className="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-lg flex items-center gap-2 h-15"
+                type="button"
+              >
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/512px-WhatsApp.svg.png"
+                  alt="WhatsApp"
+                  width="20"
+                  height="20"
+                />
+                Contactar por WhatsApp
+              </Button>
 
-                className="mt-2 px-4 py-2 bg-[#013765] text-white rounded-xl hover:bg-blue-800 transition flex flex-row items-center space-x-2 gap-2"
-              ><CalendarSync />
-                Volver
-              </button>
+              <a href="tel:2615644000" className="w-full lg:w-auto text-center">
+                <button className="bg-[#013765] hover:bg-blue-800 text-white px-5 py-3 rounded-lg w-full text-center" type="button">
+                  📞 Llamar por teléfono
+                </button>
+              </a>
             </div>
-
           )}
+
+          {/* Botón común de volver, si querés que esté siempre */}
+          {(error !== "El turno seleccionado ya no está disponible. Por favor, elija otro.") &&
+            (error !== "Su obra social ya cumplió con los cupos disponibles para este turno, puede solicitar un nuevo turno como particular.") && (
+              <div className="flex justify-center">
+                <button
+                  onClick={() => setStep(2)}
+                  className="bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded-lg transition"
+                >
+                  Volver
+                </button>
+              </div>
+            )}
         </div>
       )}
+
 
       <div className="flex justify-between">
         <Button
