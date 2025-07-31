@@ -77,9 +77,9 @@ export default function DateTimeStep({ data, updateData, onNext, onBack, scrollT
           <CalendarDays className="w-12 h-12 text-white" />
         </div>
         <div className="space-y-2 text-center md:text-left">
-          <h2 className="text-2xl font-bold text-gray-800">Seleccione fecha y horario</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Seleccionar fecha y horario</h2>
           <p className="text-gray-600">
-            Elija cuándo desea atenderse con <span className="text-[#013765] font-medium">{data.doctor}</span>
+            Elegir entre las opciones disponibles y hacer clic en continuar { /*<span className="text-[#013765] font-medium">{data.doctor}</span> */}
           </p>
         </div>
       </div>
@@ -99,7 +99,7 @@ export default function DateTimeStep({ data, updateData, onNext, onBack, scrollT
             <div>
               <h3 className="font-medium text-gray-800 mb-4 flex items-center gap-2">
                 <CalendarDays className="w-5 h-5 text-[#013765]" />
-                Seleccione una fecha
+                Seleccionar fecha 
               </h3>
               <Calendar
                 mode="single"
@@ -115,7 +115,7 @@ export default function DateTimeStep({ data, updateData, onNext, onBack, scrollT
             <div>
               <h3 className="font-medium text-gray-800 mb-4 flex items-center gap-2">
                 <Clock className="w-5 h-5 text-[#013765]" />
-                Seleccione un horario
+                Seleccionar hora 
               </h3>
               {data.date ? (
                 timesForDate.length > 0 ? (

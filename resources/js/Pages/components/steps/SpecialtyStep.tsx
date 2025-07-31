@@ -33,9 +33,9 @@ export default function SpecialtyStep({ specialties, data, updateData, onNext, o
           <Stethoscope className="w-12 h-12 text-white" />
         </div>
         <div className="space-y-2 text-center md:text-left">
-          <h2 className="text-2xl font-bold text-gray-800">Seleccione especialidad</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Seleccionar especialidad </h2>
           <p className="text-gray-600">
-            Especialidades disponibles
+            Elegir turnos para consultas profesionales
           </p>
         </div>
       </div>

@@ -165,8 +165,8 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
         <div>
           <h2 className="text-3xl font-bold text-gray-800 mb-2">¡Turno confirmado!</h2>
           <p className="text-gray-600 max-w-md mx-auto">
-            Hemos enviado los detalles de su turno a <span className="font-medium text-[#013765]">{data.email}</span>.
-            También recibirá un recordatorio por whatsapp al <span className="font-medium text-[#013765]">{data.phone}</span>.
+            Enviamos el comprobante de turno a (<span className="font-medium text-[#013765]">{data.email}</span>).
+            También recibirás un recordatorio 48 horas antes por WhatsApp al (<span className="font-medium text-[#013765]">{data.phone}</span>).
           </p>
         </div>
         <div className="bg-gradient-to-br from-blue-50 to-blue-50 p-8 rounded-2xl max-w-md mx-auto text-left border border-blue-100 shadow-sm">
@@ -223,8 +223,9 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
           <div className="rounded-lg p-4">
             <h4 className="font-medium text-[#013765] mb-2">Importante:</h4>
             <ul className="text-black text-sm space-y-1">
-              <li>• Preséntese 30 minutos antes del horario asignado <strong>para llevar a cabo la admisión correspondiente</strong>.</li>
-              <li>• Para <strong>cancelar</strong> el turno dispondrá de un <strong>boton en el correo recibido</strong>.</li>
+              <li>• Por favor, asistí 30 minutos antes del horario asignado para realizar la admisión.</li>
+              <li>• Si no encontrás el comprobante de turno, revisá spam u otras bandejas de entradas. Desde ese correo, también podrás cancelar el turno. </li>
+              <li>• Si necesitás actualizar tus datos personales, comunicate con el Call Center o acercate a Admisión. </li>
 
             </ul>
           </div>
@@ -246,8 +247,8 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
           <ClipboardCheck className="w-12 h-12 text-white" />
         </div>
         <div className="space-y-2 text-center md:text-left">
-          <h2 className="text-2xl font-bold text-gray-800">Resumen del turno</h2>
-          <p className="text-gray-600">Verifique los datos de su turno antes de confirmar</p>
+          <h2 className="text-2xl font-bold text-gray-800">Información del turno</h2>
+          <p className="text-gray-600">Verificar los datos ingresados</p>
         </div>
       </div>
 
@@ -266,7 +267,7 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
             <p className="font-medium text-gray-800">{data.doctor}</p>
           </div>
           <div className="space-y-1">
-            <p className="text-sm text-[#013765]">Fecha y Hora</p>
+            <p className="text-sm text-[#013765]">Fecha y hora</p>
             <p className="font-medium text-gray-800">
               {format(new Date(data.date), "PPP", { locale: es })} - {data.time}
             </p>

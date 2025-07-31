@@ -71,9 +71,9 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
   const handleHealthInsuranceChange = (optionValue: string, HealthInsuranceId: BigInteger, planId: BigInteger, healthInsuranceName: string, isPrimary: boolean) => {
     setSelectedHealthInsurance(optionValue)
     updateData({ healthInsurance: healthInsuranceName, newHealthInsuranceId: HealthInsuranceId, newPlanId: planId })
-    if(isPrimary) {
+    if (isPrimary) {
       updateData({ needsUpdateHealthInsurance: false })
-    }else{
+    } else {
       updateData({ needsUpdateHealthInsurance: true })
     }
   }
@@ -250,7 +250,7 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
         </div>
         <div className="space-y-2 text-center md:text-left">
           <h2 className="text-2xl font-bold text-gray-800">Datos personales</h2>
-          <p className="text-gray-600">Ingrese su DNI para buscar sus datos en el sistema</p>
+          <p className="text-gray-600">Ingresar DNI para buscar tus datos en el sistema</p>
         </div>
       </div>
 
@@ -427,7 +427,7 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
                               </div>
                               {option.value === "Particular (Sin obra social)" && (
                                 <p className="text-sm text-gray-600 mt-1">
-                                 </p>
+                                </p>
                               )}
                             </div>
                           </div>
@@ -439,10 +439,11 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
               </div>
 
               <div className="mt-4 bg-blue-50 border border-blue-100 rounded-lg p-3 text-black text-sm flex flex-row">
-                <Info className="w-6 h-6 text-[#013765]" />
+                <Info className="w-12 h-12 text-[#013765] -mt-3.5" />
                 <p className="ml-2">
-                  Estos datos se utilizarán para confirmar su turno. Recibirá la confirmación por email y un
-                  recordatorio por Whatsapp.
+                  Recibirás por mail la confirmación y, 48 horas antes, un recordatorio por WhatsApp.
+                  Revisá tu spam y otras bandejas de entrada. Si tus datos están incorrectos,
+                  comunícate con Call Center para modificarlos.
                 </p>
               </div>
             </div>
