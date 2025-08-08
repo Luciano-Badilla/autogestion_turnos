@@ -34,10 +34,12 @@ Route::post('/put/turno/{id}', [AppointmentForm::class, 'putCancelTurno']);
 Route::get('/cancelar/turno/{id}', [AppointmentForm::class, 'cancelTurnoView']);
 
 // routes/api.php
+Route::get('/enabled-doctors-all', [DoctorController::class, 'getEnabledDoctorsAll']);
 Route::get('/enabled-doctors/{idHealtInsurance?}', [DoctorController::class, 'getEnabledDoctors']);
 Route::get('/enabled-healthinsurances', [HealthinsurancesController::class, 'getEnabledhealthinsurances']);
 Route::get('/enabled-plans/{idHealthInsurance?}', [plansController::class, 'getEnabledPlans']);
 
+Route::post('/admin/sync/update', [AdminConfigurationController::class, 'update']);
 Route::post('/admin/sync/save', [AdminConfigurationController::class, 'store']);
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     Route::get('/admin/sync/load', [AdminConfigurationController::class, 'index']);

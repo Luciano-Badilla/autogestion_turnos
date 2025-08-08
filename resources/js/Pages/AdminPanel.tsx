@@ -53,7 +53,17 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
   const [loadingPlans, setLoadingPlans] = useState<number[]>([]);
   const [healthInsurancePlans, setHealthInsurancePlans] = useState<{ [key: number]: string[] }>({});
   const [enabledPlans, setEnabledPlans] = useState<{ [healthInsuranceId: number]: number[] }>({})
+  const [activeDoctorConfigs, setActiveDoctorConfigs] = useState<DoctorConfig[]>([]);
 
+
+  /*useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/enabled-doctors-all`, {
+      credentials: "include",
+    })
+      .then(res => res.json())
+      .then(setActiveDoctorConfigs)
+      .catch(console.error);
+  }, []);*/
 
   const sortDoctors = (doctors: any[]) =>
     [...doctors].sort((a, b) => {
@@ -104,19 +114,23 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
     const loadData = async () => {
       setIsLoading(true)
       try {
-        const [insurancesRes, specialtiesRes] = await Promise.all([
+        const [insurancesRes, specialtiesRes, activeDoctorsRes] = await Promise.all([
           fetch(`${import.meta.env.VITE_API_BASE_URL}/api/healthinsurances`),
           fetch(`${import.meta.env.VITE_API_BASE_URL}/api/specialties`),
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/enabled-doctors-all`, {
+            credentials: "include"
+          }),
         ])
+
         const healthInsurancesData = await insurancesRes.json()
         const specialtiesData = await specialtiesRes.json()
+        const activeDoctorsData = await activeDoctorsRes.json()
 
         const enabledInsuranceIds = config?.health_insurance?.map(i => i.value) || []
         const enabledSpecialties = config?.specialty?.map(s => ({
           id: s.value,
           doctors: s.meta?.doctors || [],
         })) || []
-
 
         const updatedInsurances = healthInsurancesData.map(i => ({
           ...i,
@@ -134,6 +148,9 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
           }
         })
 
+        // Guardar médicos activos devueltos por API
+        setActiveDoctorConfigs(activeDoctorsData.data || {})
+
         setHealthInsurances(updatedInsurances)
         setSpecialties(updatedSpecialties)
       } catch (error) {
@@ -145,6 +162,37 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
 
     loadData()
   }, [])
+
+
+  /*useEffect(() => {
+    if (specialties.length === 0 || activeDoctorConfigs.length === 0) return
+
+    const updated = specialties.map(specialty => {
+      const activeForThisSpecialty = activeDoctorConfigs.filter(
+        d => Number(d.specialty_id) === specialty.id
+      )
+
+      const newDoctors = activeForThisSpecialty.map(d => ({
+        id: Number(d.doctor_id),
+        name: "", // Podés completar si lo necesitás
+        enabled: true,
+      }))
+
+      const existingDoctorIds = new Set(specialty.doctors.map(d => d.id))
+      const mergedDoctors = [
+        ...specialty.doctors,
+        ...newDoctors.filter(d => !existingDoctorIds.has(d.id)),
+      ]
+
+      return {
+        ...specialty,
+        doctors: sortDoctors(mergedDoctors),
+      }
+    })
+
+    setSpecialties(updated)
+  }, [activeDoctorConfigs, specialties.length])*/
+
 
   const toggleHealthInsurance = (id: number) => {
     setHealthInsurances(prev =>
@@ -177,7 +225,20 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
           : specialty
       )
     )
+
+    // Si lo desactivo, también lo quitamos de activeDoctorConfigs
+    setActiveDoctorConfigs(prev => {
+      const updated = { ...prev }
+      if (updated[specialtyId]) {
+        updated[specialtyId] = updated[specialtyId].filter(d => d.doctor_id !== doctorId)
+        if (updated[specialtyId].length === 0) {
+          delete updated[specialtyId]
+        }
+      }
+      return updated
+    })
   }
+
 
   const toggleSpecialtyCollapse = async (specialtyId: number) => {
     const alreadyOpen = openSpecialties.includes(specialtyId)
@@ -239,7 +300,9 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
     setIsSaving(true)
     try {
       const selectedHealthInsurances = healthInsurances.filter(i => i.enabled)
-      const selectedSpecialties = specialties
+
+      // Partimos de los médicos activos desde switches
+      let selectedSpecialties = specialties
         .filter(s => s.enabled)
         .map(s => ({
           id: s.id,
@@ -250,6 +313,32 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
               acceptedInsurances: doctorAcceptedInsurances[d.id] || [],
             })),
         }))
+
+      // Agregamos médicos activos desde API si no están ya en la lista
+      Object.entries(activeDoctorConfigs).forEach(([specialtyId, doctors]) => {
+        const specId = Number(specialtyId)
+        const specialtyIndex = selectedSpecialties.findIndex(s => s.id === specId)
+
+        if (specialtyIndex >= 0) {
+          doctors.forEach(doc => {
+            if (!selectedSpecialties[specialtyIndex].doctors.some(d => d.id === doc.doctor_id)) {
+              selectedSpecialties[specialtyIndex].doctors.push({
+                id: doc.doctor_id,
+                acceptedInsurances: doctorAcceptedInsurances[doc.doctor_id] || [],
+              })
+            }
+          })
+        } else {
+          selectedSpecialties.push({
+            id: specId,
+            doctors: doctors.map(doc => ({
+              id: doc.doctor_id,
+              acceptedInsurances: doctorAcceptedInsurances[doc.doctor_id] || [],
+            })),
+          })
+        }
+      })
+
       await fetch(`${import.meta.env.VITE_API_BASE_URL}/sanctum/csrf-cookie`, {
         credentials: "include",
       });
@@ -276,8 +365,6 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
       setIsSaving(false)
     }
   }
-
-
 
   const handleImageUpload = async (
     e,

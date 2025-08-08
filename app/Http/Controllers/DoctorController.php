@@ -26,4 +26,23 @@ class DoctorController extends Controller
 
         return $doctorIdsWithInsurance;
     }
+
+    public function getEnabledDoctorsAll()
+    {
+        $configs = AdminConfiguration::where('type', 'doctor')->get();
+
+        $enabledDoctors = $configs->map(function ($config) {
+            return [
+                'doctor_id' => (int) $config->reference_id,
+                'specialty_id' => (int) $config->parent_id,
+            ];
+        });
+
+        // Agrupar por specialty_id
+        $grouped = $enabledDoctors->groupBy('specialty_id');
+
+        return response()->json([
+            'data' => $grouped
+        ]);
+    }
 }
