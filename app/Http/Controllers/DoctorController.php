@@ -18,13 +18,13 @@ class DoctorController extends Controller
             ->toArray();
 
         // Filtrar los doctores que estén habilitados y tengan la obra social especificada
-        $doctorIdsWithInsurance = AdminConfiguration::where('type', 'doctor_insurance')
-            ->where('reference_id', $idHealthInsurance) // la obra social pasada
+        /*$doctorIdsWithInsurance = AdminConfiguration::where('type', 'doctor_insurance')
+            //->where('reference_id', $idHealthInsurance) // la obra social pasada
             ->whereIn('parent_id', $enabledDoctorIds)   // que además estén habilitados
             ->pluck('parent_id') // IDs de doctores
-            ->toArray();
+            ->toArray();*/
 
-        return $doctorIdsWithInsurance;
+        return $enabledDoctorIds;
     }
 
     public function getEnabledDoctorsAll()
