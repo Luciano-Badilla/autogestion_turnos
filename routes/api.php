@@ -34,6 +34,8 @@ Route::post('/put/turno/{id}', [AppointmentForm::class, 'putCancelTurno']);
 Route::get('/cancelar/turno/{id}', [AppointmentForm::class, 'cancelTurnoView']);
 
 // routes/api.php
+// routes/api.php
+Route::get('/enabled-plans-all', [DoctorController::class, 'getEnabledPlansAll']);
 Route::get('/enabled-doctors-all', [DoctorController::class, 'getEnabledDoctorsAll']);
 Route::get('/enabled-doctors/{idHealtInsurance?}', [DoctorController::class, 'getEnabledDoctors']);
 Route::get('/enabled-healthinsurances', [HealthinsurancesController::class, 'getEnabledhealthinsurances']);

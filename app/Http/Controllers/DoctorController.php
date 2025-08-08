@@ -45,4 +45,26 @@ class DoctorController extends Controller
             'data' => $grouped
         ]);
     }
+
+    // app/Http/Controllers/AdminController.php
+    public function getEnabledPlansAll()
+    {
+        $enabledPlans = AdminConfiguration::where('type', 'plan')
+            ->get()
+            ->groupBy('parent_id'); // Agrupar por obra social
+
+        $result = [];
+
+        foreach ($enabledPlans as $healthInsuranceId => $plans) {
+            $result[$healthInsuranceId] = $plans->map(function ($plan) {
+                return [
+                    'plan_id' => $plan->reference_id,
+                ];
+            })->values();
+        }
+
+        return response()->json([
+            'data' => $result
+        ]);
+    }
 }

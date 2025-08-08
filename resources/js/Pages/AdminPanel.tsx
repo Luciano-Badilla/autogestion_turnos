@@ -53,7 +53,8 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
   const [loadingPlans, setLoadingPlans] = useState<number[]>([]);
   const [healthInsurancePlans, setHealthInsurancePlans] = useState<{ [key: number]: string[] }>({});
   const [enabledPlans, setEnabledPlans] = useState<{ [healthInsuranceId: number]: number[] }>({})
-  const [activeDoctorConfigs, setActiveDoctorConfigs] = useState<DoctorConfig[]>([]);
+  const [activeDoctorConfigs, setActiveDoctorConfigs] = useState([]);
+  const [activePlanConfigs, setActivePlanConfigs] = useState([]);
 
 
   /*useEffect(() => {
@@ -114,10 +115,18 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
     const loadData = async () => {
       setIsLoading(true)
       try {
-        const [insurancesRes, specialtiesRes, activeDoctorsRes] = await Promise.all([
+        const [
+          insurancesRes,
+          specialtiesRes,
+          activeDoctorsRes,
+          activePlansRes
+        ] = await Promise.all([
           fetch(`${import.meta.env.VITE_API_BASE_URL}/api/healthinsurances`),
           fetch(`${import.meta.env.VITE_API_BASE_URL}/api/specialties`),
           fetch(`${import.meta.env.VITE_API_BASE_URL}/api/enabled-doctors-all`, {
+            credentials: "include"
+          }),
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/api/enabled-plans-all`, {
             credentials: "include"
           }),
         ])
@@ -125,6 +134,7 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
         const healthInsurancesData = await insurancesRes.json()
         const specialtiesData = await specialtiesRes.json()
         const activeDoctorsData = await activeDoctorsRes.json()
+        const activePlansData = await activePlansRes.json()
 
         const enabledInsuranceIds = config?.health_insurance?.map(i => i.value) || []
         const enabledSpecialties = config?.specialty?.map(s => ({
@@ -151,6 +161,9 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
         // Guardar médicos activos devueltos por API
         setActiveDoctorConfigs(activeDoctorsData.data || {})
 
+        // Guardar planes activos devueltos por API
+        setActivePlanConfigs(activePlansData.data || {})
+
         setHealthInsurances(updatedInsurances)
         setSpecialties(updatedSpecialties)
       } catch (error) {
@@ -162,6 +175,7 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
 
     loadData()
   }, [])
+
 
 
   /*useEffect(() => {
@@ -339,9 +353,26 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
         }
       })
 
+      // --- PLANES ---
+      // Partimos de los planes seleccionados desde los switches
+      let selectedPlans = { ...enabledPlans }
+
+      // Agregamos planes activos desde API si no están ya
+      Object.entries(activePlanConfigs || {}).forEach(([insuranceId, plans]) => {
+        const insId = Number(insuranceId)
+        if (!selectedPlans[insId]) {
+          selectedPlans[insId] = []
+        }
+        plans.forEach(plan => {
+          if (!selectedPlans[insId].includes(plan.plan_id)) {
+            selectedPlans[insId].push(plan.plan_id)
+          }
+        })
+      })
+
       await fetch(`${import.meta.env.VITE_API_BASE_URL}/sanctum/csrf-cookie`, {
         credentials: "include",
-      });
+      })
 
       await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/sync/save`, {
         method: "POST",
@@ -351,7 +382,7 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
           user_role: user_role,
           healthInsurances: selectedHealthInsurances.map(h => h.id),
           specialties: selectedSpecialties,
-          healthInsurancePlans: Object.entries(enabledPlans).map(([healthInsuranceId, plans]) => ({
+          healthInsurancePlans: Object.entries(selectedPlans).map(([healthInsuranceId, plans]) => ({
             health_insurance_id: Number(healthInsuranceId),
             plans: plans.map(planId => ({ id: planId })),
           })),
@@ -365,6 +396,7 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
       setIsSaving(false)
     }
   }
+
 
   const handleImageUpload = async (
     e,
@@ -529,14 +561,27 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
                                       onCheckedChange={() => {
                                         setEnabledPlans(prev => {
                                           const currentPlans = prev[insurance.id] || []
+
                                           if (isEnabled) {
-                                            // deshabilitar plan
-                                            return {
+                                            // Desactivar plan: lo quitamos de enabledPlans y también de activePlanConfigs
+                                            // Actualizamos enabledPlans:
+                                            const newEnabledPlans = {
                                               ...prev,
                                               [insurance.id]: currentPlans.filter(pid => pid !== plan.id),
                                             }
+                                            // Actualizamos activePlanConfigs para que no tenga ese plan
+                                            setActivePlanConfigs(prevActive => {
+                                              if (!prevActive) return prevActive
+                                              const plansForIns = prevActive[insurance.id] || []
+                                              return {
+                                                ...prevActive,
+                                                [insurance.id]: plansForIns.filter(p => p.plan_id !== plan.id),
+                                              }
+                                            })
+                                            return newEnabledPlans
+
                                           } else {
-                                            // habilitar plan
+                                            // Activar plan: agregamos al enabledPlans, y dejamos activePlanConfigs intacto (si querés podés sincronizar)
                                             return {
                                               ...prev,
                                               [insurance.id]: [...currentPlans, plan.id],
@@ -545,6 +590,7 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
                                         })
                                       }}
                                     />
+
                                   </li>
                                 )
                               })}
