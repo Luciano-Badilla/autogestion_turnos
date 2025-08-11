@@ -25,29 +25,33 @@ class AdminConfigurationController extends Controller
             'specialties.*.doctors.*.acceptedInsurances' => 'array',
             'specialties.*.doctors.*.acceptedInsurances.*' => 'integer',
 
-            // Cambié aquí:
             'healthInsurancePlans' => 'array',
             'healthInsurancePlans.*.health_insurance_id' => 'integer',
             'healthInsurancePlans.*.plans' => 'array',
             'healthInsurancePlans.*.plans.*.id' => 'integer',
+
+            // NUEVO:
+            'extraDoctors' => 'array',
+            'extraDoctors.*.specialty_id' => 'integer',
+            'extraDoctors.*.doctors' => 'array',
+            'extraDoctors.*.doctors.*.id' => 'integer',
+            'extraDoctors.*.doctors.*.acceptedInsurances' => 'array',
+            'extraDoctors.*.doctors.*.acceptedInsurances.*' => 'integer',
+
             'user_role' => 'integer',
         ]);
 
         $user_role = $data['user_role'];
 
-        //AdminConfiguration::truncate();
+        // Limpio como antes
         if (in_array($user_role, [1, 3])) {
-
             comercializacion_configurations::truncate();
-
-            // Guardar obras sociales generales
             foreach ($data['healthInsurances'] as $id) {
                 comercializacion_configurations::create([
                     'type' => 'health_insurance',
                     'reference_id' => $id,
                 ]);
             }
-
             foreach ($data['healthInsurancePlans'] as $item) {
                 $healthInsuranceId = $item['health_insurance_id'];
                 foreach ($item['plans'] as $plan) {
@@ -61,10 +65,9 @@ class AdminConfigurationController extends Controller
         }
 
         if (in_array($user_role, [1, 4])) {
-
             call_center_configurations::truncate();
 
-            // Guardar especialidades, médicos y obras sociales aceptadas por cada médico
+            // 2.1) Especialidades HABILITADAS (igual que antes)
             foreach ($data['specialties'] as $specialty) {
                 call_center_configurations::create([
                     'type' => 'specialty',
@@ -87,11 +90,30 @@ class AdminConfigurationController extends Controller
                     }
                 }
             }
+
+            // 2.2) Doctores de especialidades DESHABILITADAS (NO crear 'specialty')
+            foreach ($data['extraDoctors'] ?? [] as $group) {
+                $specId = $group['specialty_id'];
+                foreach ($group['doctors'] as $doctor) {
+                    call_center_configurations::create([
+                        'type' => 'doctor',
+                        'reference_id' => $doctor['id'],
+                        'parent_id' => $specId, // se mantiene el parent_id para agrupación, pero sin crear 'specialty'
+                    ]);
+
+                    foreach ($doctor['acceptedInsurances'] as $insuranceId) {
+                        call_center_configurations::create([
+                            'type' => 'doctor_insurance',
+                            'reference_id' => $insuranceId,
+                            'parent_id' => $doctor['id'],
+                        ]);
+                    }
+                }
+            }
         }
 
         AdminConfiguration::truncate();
 
-        // Migrar configuraciones de Call Center
         call_center_configurations::all()->each(function ($config) {
             AdminConfiguration::create([
                 'type' => $config->type,
@@ -100,7 +122,6 @@ class AdminConfigurationController extends Controller
             ]);
         });
 
-        // Migrar configuraciones de Comercialización
         comercializacion_configurations::all()->each(function ($config) {
             AdminConfiguration::create([
                 'type' => $config->type,
@@ -109,9 +130,9 @@ class AdminConfigurationController extends Controller
             ]);
         });
 
-
         return response()->json(['message' => 'Configuración guardada.']);
     }
+
 
 
     public function update(Request $request)

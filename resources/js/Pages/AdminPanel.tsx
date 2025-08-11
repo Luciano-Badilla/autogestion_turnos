@@ -315,7 +315,12 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
     try {
       const selectedHealthInsurances = healthInsurances.filter(i => i.enabled)
 
-      // Partimos de los médicos activos desde switches
+      // especialidades habilitadas
+      const enabledSpecialtyIds = new Set(
+        specialties.filter(s => s.enabled).map(s => s.id)
+      )
+
+      // armo specialties -> SOLO habilitadas (como ya lo tenías)
       let selectedSpecialties = specialties
         .filter(s => s.enabled)
         .map(s => ({
@@ -328,15 +333,16 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
             })),
         }))
 
-      // Agregamos médicos activos desde API si no están ya en la lista
-      Object.entries(activeDoctorConfigs).forEach(([specialtyId, doctors]) => {
+      // mergeo médicos activos desde la API UNICAMENTE si la especialidad está habilitada
+      Object.entries(activeDoctorConfigs || {}).forEach(([specialtyId, doctors]) => {
         const specId = Number(specialtyId)
-        const specialtyIndex = selectedSpecialties.findIndex(s => s.id === specId)
+        if (!enabledSpecialtyIds.has(specId)) return
 
-        if (specialtyIndex >= 0) {
+        const i = selectedSpecialties.findIndex(s => s.id === specId)
+        if (i >= 0) {
           doctors.forEach(doc => {
-            if (!selectedSpecialties[specialtyIndex].doctors.some(d => d.id === doc.doctor_id)) {
-              selectedSpecialties[specialtyIndex].doctors.push({
+            if (!selectedSpecialties[i].doctors.some(d => d.id === doc.doctor_id)) {
+              selectedSpecialties[i].doctors.push({
                 id: doc.doctor_id,
                 acceptedInsurances: doctorAcceptedInsurances[doc.doctor_id] || [],
               })
@@ -353,17 +359,23 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
         }
       })
 
-      // --- PLANES ---
-      // Partimos de los planes seleccionados desde los switches
-      let selectedPlans = { ...enabledPlans }
+      // === EXTRA: doctores de especialidades DESACTIVADAS que deben mantenerse activos ===
+      const extraDoctors = Object.entries(activeDoctorConfigs || {})
+        .filter(([specialtyId]) => !enabledSpecialtyIds.has(Number(specialtyId)))
+        .map(([specialtyId, doctors]) => ({
+          specialty_id: Number(specialtyId),
+          doctors: doctors.map((doc: any) => ({
+            id: doc.doctor_id,
+            acceptedInsurances: doctorAcceptedInsurances[doc.doctor_id] || [],
+          })),
+        }))
 
-      // Agregamos planes activos desde API si no están ya
+      // --- PLANES (igual que antes) ---
+      let selectedPlans = { ...enabledPlans }
       Object.entries(activePlanConfigs || {}).forEach(([insuranceId, plans]) => {
         const insId = Number(insuranceId)
-        if (!selectedPlans[insId]) {
-          selectedPlans[insId] = []
-        }
-        plans.forEach(plan => {
+        if (!selectedPlans[insId]) selectedPlans[insId] = []
+        plans.forEach((plan: any) => {
           if (!selectedPlans[insId].includes(plan.plan_id)) {
             selectedPlans[insId].push(plan.plan_id)
           }
@@ -379,23 +391,25 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_role: user_role,
+          user_role,
           healthInsurances: selectedHealthInsurances.map(h => h.id),
-          specialties: selectedSpecialties,
+          specialties: selectedSpecialties, // <-- SOLO las habilitadas
+          extraDoctors,                     // <-- NUEVO: doctores de especialidades deshabilitadas
           healthInsurancePlans: Object.entries(selectedPlans).map(([healthInsuranceId, plans]) => ({
             health_insurance_id: Number(healthInsuranceId),
-            plans: plans.map(planId => ({ id: planId })),
+            plans: (plans as number[]).map(planId => ({ id: planId })),
           })),
         }),
       })
 
       toast.success("Configuración guardada exitosamente")
-    } catch (error) {
+    } catch (e) {
       alert("Error al guardar la configuración")
     } finally {
       setIsSaving(false)
     }
   }
+
 
 
   const handleImageUpload = async (
@@ -709,7 +723,7 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
                                 </div>
                               </div>
 
-                              {/* Aquí agrego el multiselect sin modificar el render original */}
+                              {/* Aquí agrego el multiselect sin modificar el render original 
                               <div className="mt-1 px-3 w-full">
                                 <Popover>
                                   <PopoverTrigger asChild>
@@ -761,7 +775,7 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
                                     </Command>
                                   </PopoverContent>
                                 </Popover>
-                              </div>
+                              </div>*/}
 
 
                             </div>
