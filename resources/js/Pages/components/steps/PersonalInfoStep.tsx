@@ -9,14 +9,52 @@ import { AlertCircle, FileText, Mail, Phone, Search, User, UserPlus, Info } from
 import { is } from "date-fns/locale"
 
 // Función que hace la llamada real a la API Laravel
+// Función que hace la llamada real a la API Laravel
 const searchPatientByDNI = async (dni: string) => {
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/personalInfo/${dni}`)
-  if (!response.ok) {
-    throw new Error("Paciente no encontrado")
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000); // 8s de timeout
+
+  try {
+    const url = `${import.meta.env.VITE_API_BASE_URL}/api/personalInfo/${dni}`;
+    const res = await fetch(url, { signal: controller.signal });
+
+    // Caso "no encontrado" por status
+    if (res.status === 404) {
+      return { type: "not-found" as const };
+    }
+
+    // Otros errores HTTP (400/422/500/…): NO es "no encontrado"
+    if (!res.ok) {
+      const msg = await res.text().catch(() => "");
+      throw new Error(`server:${res.status}:${msg}`);
+    }
+
+    // Parseo seguro
+    const json = await res.json().catch(() => {
+      throw new Error("bad-json");
+    });
+
+    // Si el backend devuelve array y puede venir vacío
+    const patient = Array.isArray(json) ? json[0] : json;
+    if (!patient) {
+      return { type: "not-found" as const };
+    }
+
+    return { type: "ok" as const, patient };
+  } catch (err: any) {
+    if (err?.name === "AbortError") {
+      throw new Error("timeout");
+    }
+    // TypeError típico de fetch cuando no hay red / CORS
+    if (err instanceof TypeError) {
+      throw new Error("network");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
   }
-  const data = (await response.json())[0];
-  return data
-}
+};
+
 
 export default function PersonalInfoStep({ data, updateData, onNext, onBack, onRegisterNew }) {
   const [dniInput, setDniInput] = useState(data.documentNumber)
@@ -32,6 +70,8 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
   const [phoneInput, setPhoneInput] = useState("")
   const [phoneError, setPhoneError] = useState("")
   const [needsPhone, setNeedsPhone] = useState(false)
+  const [techError, setTechError] = useState<string | null>(null); // nuevo
+
 
   // Estado para la selección de obras sociales
   const [primaryHealthInsurance, setPrimaryHealthInsurance] = useState("")
@@ -79,64 +119,110 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
   }
 
   const handleSearch = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    const error = validateDNI(dniInput)
+    const error = validateDNI(dniInput);
     if (error) {
-      setDniError(error)
-      return
+      setDniError(error);
+      return;
     }
 
-    setIsSearching(true)
-    setDniError("")
-    setNotFoundError(false)
-    setNeedsEmail(false)
-    setEmailError("")
-    setNeedsPhone(false)
-    setPhoneError("")
+    setIsSearching(true);
+    setDniError("");
+    setNotFoundError(false);
+    setTechError(null);        // limpiar error técnico
+    setNeedsEmail(false);
+    setEmailError("");
+    setNeedsPhone(false);
+    setPhoneError("");
 
     try {
-      const patientData = await searchPatientByDNI(dniInput)
-      setNeedsEmail(!patientData.email)
-      setEmailInput("")
-      const telefono =
-        patientData.contacto_telefono?.trim()
+      const result = await searchPatientByDNI(dniInput);
+
+      if (result.type === "not-found") {
+        setPatientFound(false);
+        setNotFoundError(true);  // <-- solo aquí se muestra “Registrar nuevo paciente”
+        updateData({
+          documentNumber: dniInput, // opcional: conservar DNI ingresado
+          firstName: "", lastName: "", email: "", phone: "",
+          healthInsurance: "", healthInsuranceId: "",
+          personId: null, newHealthInsuranceId: null, newPlanId: null,
+          needsUpdateHealthInsurance: false,
+        });
+        return;
+      }
+
+      if (result.type === "ok") {
+        const patientData = result.patient;
+        const telefono = patientData.contacto_telefono?.trim()
           ? patientData.contacto_telefono
           : patientData.contacto_telefono_2?.trim()
             ? patientData.contacto_telefono_2
-            : ""
+            : "";
 
-      setNeedsPhone(!telefono)
-      setPhoneInput("")
+        setNeedsEmail(!patientData.email);
+        setEmailInput("");
+        setNeedsPhone(!telefono);
+        setPhoneInput("");
+
+        updateData({
+          documentNumber: dniInput,
+          firstName: patientData.nombres,
+          lastName: patientData.apellidos,
+          email: patientData.email ?? "",
+          phone: telefono,
+          healthInsurance: patientData.obra_social,
+          healthInsuranceId: patientData.obra_social_id,
+          planId: patientData.plan_id,
+          personId: patientData.id,
+          needsUpdateHealthInsurance: false,
+          newHealthInsuranceId: null,
+          newPlanId: null,
+        });
+
+        setPatientFound(true);
+        setPrimaryHealthInsurance(patientData.obra_social);
+        setAdditionalHealthInsurances(patientData.planes_activos || []);
+        setSelectedHealthInsurance(
+          patientData.obra_social === "PARTICULAR HU COMPLETO"
+            ? "Particular (Sin obra social)"
+            : patientData.obra_social
+        );
+      }
+    } catch (error: any) {
+      console.error("Error al buscar paciente:", error);
+      setPatientFound(false);
+      setNotFoundError(false);             // IMPORTANTE: no confundir
+      // Mensajes más claros según el tipo
+      if (error.message === "timeout") {
+        setTechError("La búsqueda tardó demasiado. Verificá tu conexión e intentá de nuevo.");
+      } else if (error.message === "network") {
+        setTechError("No se pudo conectar con el servidor. Revisá tu conexión o VPN.");
+      } else if (error.message?.startsWith("server:")) {
+        const status = error.message.split(":")[1];
+        setTechError(
+          status === "500"
+            ? "El servidor presentó un error (500). Intentá más tarde."
+            : `Error del servidor (${status}).`
+        );
+      } else if (error.message === "bad-json") {
+        setTechError("Respuesta inválida del servidor. Contactá al soporte.");
+      } else {
+        setTechError("Ocurrió un error inesperado. Intentá nuevamente.");
+      }
+
+      // Limpiar datos
       updateData({
-        documentNumber: dniInput,
-        firstName: patientData.nombres,
-        lastName: patientData.apellidos,
-        email: patientData.email ?? "",
-        phone: telefono,
-        healthInsurance: patientData.obra_social,
-        healthInsuranceId: patientData.obra_social_id,
-        planId: patientData.plan_id,
-        personId: patientData.id,
-        needsUpdateHealthInsurance: false,
-        newHealthInsuranceId: null,
-        newPlanId: null,
-      })
-
-
-      setPatientFound(true)
-      setPrimaryHealthInsurance(patientData.obra_social)
-      setAdditionalHealthInsurances(patientData.planes_activos)
-      setSelectedHealthInsurance((patientData.obra_social == 'PARTICULAR HU COMPLETO') ? 'Particular (Sin obra social)' : patientData.obra_social)
-    } catch (error) {
-      console.error("Error al buscar paciente:", error)
-      setNotFoundError(true)
-      updateData({ firstName: "", lastName: "", email: "", phone: "", healthInsurance: "", healthInsuranceId: "", documentNumber: "", newHealthInsuranceId: null, newPlanId: null, needsUpdateHealthInsurance: false })
-      setPatientFound(false)
+        firstName: "", lastName: "", email: "", phone: "",
+        healthInsurance: "", healthInsuranceId: "",
+        documentNumber: "", newHealthInsuranceId: null, newPlanId: null,
+        needsUpdateHealthInsurance: false
+      });
     } finally {
-      setIsSearching(false)
+      setIsSearching(false);
     }
-  }
+  };
+
 
   const getAllHealthInsuranceOptions = () => {
     const options = []
@@ -290,31 +376,40 @@ export default function PersonalInfoStep({ data, updateData, onNext, onBack, onR
               </Button>
             </div>
             {dniError && <p className="text-rose-500 text-sm">{dniError}</p>}
-          </div>
-
-          {notFoundError && (
-            <div className="bg-rose-50 border border-rose-200 rounded-lg p-4 space-y-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+            {techError && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-medium text-black">Paciente no encontrado</h4>
-                  <p className="text-black text-sm mt-1">
-                    No se encontraron datos asociados a este DNI en nuestro sistema.
-                  </p>
+                  <h4 className="font-medium text-amber-900">No se pudo completar la búsqueda</h4>
+                  <p className="text-amber-900 text-sm mt-1">{techError}</p>
                 </div>
               </div>
-              <div className="flex gap-2 justify-center w-full items-center">
-                <Button
-                  type="button"
-                  onClick={handleRegisterNew}
-                  className="bg-[#013765] hover:bg-blue-800 text-white flex items-center gap-2"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  Registrar nuevo paciente
-                </Button>
+            )}
+            {notFoundError && (
+              <div className="bg-rose-50 border border-rose-200 rounded-lg p-4 space-y-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-black">Paciente no encontrado</h4>
+                    <p className="text-black text-sm mt-1">
+                      No se encontraron datos asociados a este DNI en nuestro sistema.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-center w-full items-center">
+                  <Button
+                    type="button"
+                    onClick={handleRegisterNew}
+                    className="bg-[#013765] hover:bg-blue-800 text-white flex items-center gap-2"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Registrar nuevo paciente
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+
+          </div>
 
           {patientFound && (
             <div ref={patientDataRef} className="mt-6 border-t border-gray-100 pt-6">

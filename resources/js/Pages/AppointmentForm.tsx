@@ -202,34 +202,61 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
 
   //console.log(appointmentData);
   return (
-    <div className="h-full w-full">
+    <div className="min-h-screen w-full flex flex-col">
+      {/* Header */}
       <div className="text-center bg-[#013765] w-full py-2">
-        <div className="relative min-w-5xl max-w-5xl mx-auto h-full w-full px-6">
+        <div className="relative min-w-5xl max-w-5xl mx-auto w-full px-6">
           <HuIcon />
         </div>
       </div>
+
+      {/* Banner opcional */}
       {step === 1 && (
-        <div className="text-center bg-blue-100 w-full py-4 border-b-4 border-gray-300">
-          <p className="text-center text-[#013765] text-3xl px-2" style={{
-            fontFamily: '"Arial Unicode MS", sans-serif',
-            transform: 'scaleY(0.9)', // Achata el texto verticalmente
-            display: 'inline-block',  // Necesario para que transform funcione bien en texto
-          }}>
-            Gracias por ingresar a nuestro portal de turnos.
-          </p>
+        <div className="w-full lg:hidden flex justify-center overflow-hidden h-[100px]">
+          <img
+            src="/autogestion_turnos_hu/public/images/second_banner.jpg"
+            alt="logo"
+            className="object-cover w-full"
+          />
         </div>
       )}
 
-
-      <div className="relative min-w-5xl max-w-5xl mx-auto h-full w-full">
-        <div className="h-full w-full bg-white backdrop-blur-sm bg-opacity-70 rounded-2xl overflow-hidden flex flex-col items-center justify-center">
+      {/* CONTENIDO que empuja el footer */}
+      <main className="relative min-w-5xl max-w-5xl mx-auto w-full flex-1">
+        <div className="bg-white backdrop-blur-sm bg-opacity-70 rounded-2xl overflow-hidden flex flex-col items-center justify-center">
           <div className="p-6 md:p-8 w-full">
             <div className="space-y-8 w-full">
               {renderStep()}
             </div>
           </div>
         </div>
-      </div>
+      </main>
+
+      {/* FOOTER fijo al fondo */}
+      <footer className="mt-auto w-full bg-[#013765] text-white">
+        <div className="mx-auto w-full lg:max-w-[30%] px-6 py-5">
+          <p className="text-sm leading-relaxed">
+            Si tenés dudas comunicate con nuestro Call Center de lunes a viernes de 8 a 20 al
+            <span className="font-semibold"> WhatsApp</span>{" "}
+            <a href="https://wa.me/542612053408" className="underline hover:no-underline">
+              261 205 3408
+            </a>
+            {" "}o por <span className="font-semibold">llamada telefónica</span> al{" "}
+            <a href="tel:2615644400" className="underline hover:no-underline">
+              261 564 4400
+            </a>.
+            <br />
+            <span className="font-semibold">Conmutador general:</span>{" "}
+            <a href="tel:5644011" className="underline hover:no-underline">564 4011</a>
+            <br />
+            <span className="font-semibold">Informes:</span>{" "}
+            <a href="mailto:info@hospital.uncu.edu.ar" className="underline hover:no-underline">
+              info@hospital.uncu.edu.ar
+            </a>
+          </p>
+        </div>
+      </footer>
     </div>
   )
+
 }

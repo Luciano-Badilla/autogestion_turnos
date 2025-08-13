@@ -92,87 +92,68 @@ export function LandingPage({ onAccessGranted }: LandingPageProps) {
 
   return (
     <div className="lg:max-w-4xl lg:mx-auto lg:py-2">
-
-
       <div className="flex flex-col justify-center items-center">
-        <div className={`mb-6 bg-gray-50 border border-gray-200 rounded-lg p-6 ${isCaptchaValid ? 'hidden' : ''}`}>
-          <Label className="text-gray-700 font-medium mb-2 block">Verificación de seguridad</Label>
-          <ReCAPTCHA
-            sitekey={SITE_KEY}
-            onChange={handleCaptchaChange}
-            ref={recaptchaRef}
-          />
-        </div>
+
         {/* Captcha y acceso al sistema */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="flex w-full justify-center">
           {/* CARD 1 - Consultas */}
-          <Card className="shadow-lg border-blue-100">
+          <Card className="lg:w-[50%]">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-black">
-                <Button
-                  onClick={onAccessGranted}
-                  disabled={!isCaptchaValid}
-                  className="w-full bg-[#013765] hover:bg-blue-800 text-white py-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Ingresá aquí para turnos de consulta
-                </Button>
+                <p>Seleccioná el tipo de turno que necesitás</p>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6 -mt-6 flex flex-col gap-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-medium text-black mb-2">Importante:</h4>
-                <ul className="text-black text-sm space-y-1 pl-6 list-disc">
-                  <li>Solicitá desde aquí tu turno para consultas médicas.</li>
-                  <li>Recibirás en tu mail el comprobante del turno y, 48 horas antes, en tu WhatsApp el recordatorio.</li>
-                  <li>Te esperamos 30 minutos antes del horario del turno para realizar el trámite de admisión.</li>
-                </ul>
+              <div className="flex flex-col gap-3 w-full">
+                <div className={`mb-6 p-6 ${isCaptchaValid ? 'hidden' : ''}`}>
+                  <Label className="text-gray-700 font-medium mb-2 block">Verificación de seguridad</Label>
+                  <ReCAPTCHA
+                    sitekey={SITE_KEY}
+                    onChange={handleCaptchaChange}
+                    ref={recaptchaRef}
+                  />
+                </div>
+                <Button
+                  onClick={onAccessGranted}
+                  disabled={!isCaptchaValid}
+                  className="w-full bg-[#013765] hover:bg-[#0160b0] text-white text-nowrap py-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Turnos para consultas con especialistas
+                </Button>
+                <Button
+                  onClick={openWhatsApp}
+                  disabled={!isCaptchaValid}
+                  className="w-full bg-[#1168b1] hover:bg-[#248fea] text-white text-wrap py-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
 
-              </div>
+                  Turnos para prácticas vía WhatsApp
+                </Button>
 
-
-            </CardContent>
-          </Card>
-
-          {/* CARD 2 - Prácticas */}
-          <Card className="shadow-lg border-green-100 h-full flex flex-col">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-black w-full">
-                <div className="flex flex-col gap-3 w-full">
-                  <Button
-                    onClick={openWhatsApp}
+                <a href={isCaptchaValid ? "tel:2615644000" : "#"}>
+                  <button
                     disabled={!isCaptchaValid}
-                    className="w-full bg-green-500 hover:bg-green-600 text-white py-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full rounded-md font-semibold px-4 py-2 text-lg text-white text-wrap bg-[#1168b1] hover:bg-[#248fea] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <img
-                      src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/512px-WhatsApp.svg.png"
-                      alt="WhatsApp"
-                      width="25"
-                      height="25"
-                    />
-                    Turno para prácticas por WhatsApp
-                  </Button>
+                    Turnos para prácticas vía telefónica
+                  </button>
+                </a>
+                <div className="flex flex-col gap-3 w-full">
+                  <div className="bg-[#eff6ff] border rounded-lg p-4">
+                    <p className="text-gray-700 text-sm font-bold leading-relaxed">
+                      ¡Importante!
+                    </p>
+                    <ul className="list-disc list-outside pl-6 text-gray-700 text-sm mt-2 space-y-1">
+                      <li>
+                        Las consultas con especialistas solo incluyen turnos para controles médicos y otras especialidades.
+                      </li>
+                      <li>
+                        Las prácticas incluyen estudios, terapias, tratamientos y demás intervenciones para el diagnóstico, tratamiento y rehabilitación.
+                      </li>
+                    </ul>
+                  </div>
 
-                  <a href={isCaptchaValid ? "tel:2615644000" : "#"}>
-                    <button
-                      disabled={!isCaptchaValid}
-                      className="w-full rounded-md font-semibold px-4 py-2 text-lg text-white bg-[#013765] hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      📞 Turnos para práctica por teléfono
-                    </button>
-                  </a>
+
                 </div>
-              </CardTitle>
-            </CardHeader>
-
-            <CardContent className="p-6 flex flex-col flex-grow justify-between -mt-6">
-              <div className="flex flex-col gap-4 flex-grow">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <p className="text-gray-700 text-sm leading-relaxed">
-                    Si necesitás turno para <strong>Diagnóstico por Imágenes, tratamientos, estudios,
-                    terapias y demás prácticas médicas</strong>, comunicate vía <strong>WhatsApp</strong> o <strong>telefónicamente</strong> con nuestro Call Center.
-                  </p>
-                </div>
-
               </div>
             </CardContent>
           </Card>

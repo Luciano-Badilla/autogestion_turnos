@@ -172,12 +172,28 @@ class AppointmentForm extends Controller
             ENV('API_HEADER') => ENV('API_PASS')
         ])->get('http://172.22.118.101:81/apiturnos/public/api/v1/personas/' . $dni);
 
-        // Verificar si la respuesta es correcta
         if ($response->successful()) {
-            $personalInfo = $response->json(); // Obtener el cuerpo de la respuesta como array
-            return $personalInfo;
+            $json = $response->json();
+
+            // Detectar "paciente no encontrado" del upstream
+            $sinResultados =
+                (isset($json['data']) && is_array($json['data']) && count($json['data']) === 0)
+                || (isset($json['meta']['totalRecords']) && (int)$json['meta']['totalRecords'] === 0);
+
+            if ($sinResultados) {
+                // <-- devolvemos 404 para que el front NO habilite registro por error
+                return response()->json([
+                    'error' => 'Paciente no encontrado',
+                    'code'  => 'PATIENT_NOT_FOUND',
+                ], 404);
+            }
+
+            // Caso normal: devolver tal cual como antes
+            return $json;
         } else {
-            return response()->json(['error' => 'No se pudieron obtener los datos'], 500);
+            // Propaga tal cual lo que respondió la API principal (incluye 404)
+            return response($response->body(), $response->status())
+                ->header('Content-Type', $response->header('Content-Type', 'application/json'));
         }
     }
 
@@ -293,7 +309,6 @@ class AppointmentForm extends Controller
             $email = $request->input('email');
             $cancelacionHtml = $request->input('cancelacionHtml');
             Mail::to($email)->send(new TurnoConfirmado($cancelacionHtml));
-
         }
         return $response;
     }
