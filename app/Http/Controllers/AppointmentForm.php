@@ -18,30 +18,30 @@ class AppointmentForm extends Controller
 
     public function index()
     {
-        // Llamadas a la API externa
-        //$healthInsurances = $this->getHealthInsurances(); // array o colección
-        $specialties = $this->getSpecialties();           // array o colección
+        $specialties = $this->getSpecialties();
 
-        // Configuración habilitada desde la DB
         $configs = AdminConfiguration::all()->groupBy('type');
 
-        $enabledHealthInsuranceIds = $configs->get('health_insurance')?->pluck('reference_id')->toArray() ?? [];
         $enabledSpecialtyIds = $configs->get('specialty')?->pluck('reference_id')->toArray() ?? [];
 
-        // Filtrar los datos obtenidos desde la API
-        /*$filteredHealthInsurances = collect($healthInsurances)->filter(function ($item) use ($enabledHealthInsuranceIds) {
-            return in_array($item['id'], $enabledHealthInsuranceIds);
-        })->values();*/
+        $filteredSpecialties = collect($specialties)
+            ->filter(fn($item) => in_array($item['id'], $enabledSpecialtyIds))
+            ->values();
 
-        $filteredSpecialties = collect($specialties)->filter(function ($item) use ($enabledSpecialtyIds) {
-            return in_array($item['id'], $enabledSpecialtyIds);
-        })->values();
-
+        // NUEVO: traer mensajes por especialidad (independiente de si está activa)
+        $messages = AdminConfiguration::where('type', 'specialty_message')->get()
+            ->mapWithKeys(function ($row) {
+                return [
+                    (int)$row->reference_id => trim((string) data_get($row->payload, 'message', '')),
+                ];
+            });
 
         return Inertia::render('AppointmentForm', [
-            'specialties' => $filteredSpecialties,
+            'specialties'            => $filteredSpecialties,
+            'specialtyMessagesById'  => $messages, // ← NUEVO
         ]);
     }
+
 
 
 

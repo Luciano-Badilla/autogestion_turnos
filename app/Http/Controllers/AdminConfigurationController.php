@@ -21,6 +21,7 @@ class AdminConfigurationController extends Controller
             'specialties' => 'array',
             'specialties.*.id' => 'integer',
             'specialties.*.doctors' => 'array',
+            'specialties.*.message' => 'nullable|string|max:1000', // <-- NUEVO
             'specialties.*.doctors.*.id' => 'integer',
             'specialties.*.doctors.*.acceptedInsurances' => 'array',
             'specialties.*.doctors.*.acceptedInsurances.*' => 'integer',
@@ -37,7 +38,9 @@ class AdminConfigurationController extends Controller
             'extraDoctors.*.doctors.*.id' => 'integer',
             'extraDoctors.*.doctors.*.acceptedInsurances' => 'array',
             'extraDoctors.*.doctors.*.acceptedInsurances.*' => 'integer',
-
+            'specialtyMessages' => 'array',
+            'specialtyMessages.*.specialty_id' => 'required|integer',
+            'specialtyMessages.*.message' => 'nullable|string|max:1000',
             'user_role' => 'integer',
         ]);
 
@@ -130,12 +133,25 @@ class AdminConfigurationController extends Controller
             ]);
         });
 
+        // === NUEVO: mensajes de especialidad, independientes del estado de "enabled" ===
+        foreach (($data['specialtyMessages'] ?? []) as $row) {
+            $msg = trim((string)($row['message'] ?? ''));
+            if ($msg !== '') {
+                AdminConfiguration::create([
+                    'type'         => 'specialty_message',
+                    'reference_id' => (int)$row['specialty_id'], // id de la especialidad
+                    'parent_id'    => null,
+                    'payload'      => ['message' => $msg],
+                ]);
+            }
+        }
+
         return response()->json(['message' => 'Configuración guardada.']);
     }
 
 
 
-    public function update(Request $request)
+    /*public function update(Request $request)
     {
         $data = $request->validate([
             'healthInsurances' => 'array',
@@ -261,10 +277,10 @@ class AdminConfigurationController extends Controller
         }
 
         return response()->json(['message' => 'Configuración actualizada correctamente.']);
-    }
+    }*/
 
 
-    public function index()
+    /*public function index()
     {
         $rawConfig = AdminConfiguration::all();
 
@@ -286,5 +302,5 @@ class AdminConfigurationController extends Controller
         });
 
         return response()->json($config);
-    }
+    }*/
 }

@@ -11,7 +11,7 @@ import PatientRegistrationStep from "./components/steps/PatientRegistrationStep"
 import SummaryStep from "./components/steps/SummaryStep"
 import { LandingPage } from "./components/steps/LandingPage"
 
-export default function AppointmentForm({ healthInsurances, specialties }) {
+export default function AppointmentForm({ healthInsurances, specialties, specialtyMessagesById, }) {
   const [step, setStep] = useState(1)
 
   const [appointmentData, setAppointmentData] = useState({
@@ -161,6 +161,7 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
             onNext={nextStep}
             onBack={prevStep}
             scrollToBottomSmooth={scrollToBottomSmooth}
+            specialtyMessagesById={specialtyMessagesById}
           />
         );
       case 4:
@@ -205,16 +206,16 @@ export default function AppointmentForm({ healthInsurances, specialties }) {
     <div className="min-h-screen w-full flex flex-col">
       {/* Header */}
       <div className="text-center bg-[#013765] w-full py-2">
-        <div className="relative min-w-5xl max-w-5xl mx-auto w-full px-6">
+        <div className="relative min-w-5xl max-w-5xl mx-auto w-full px-6 flex justify-center lg:justify-start">
           <HuIcon />
         </div>
       </div>
 
       {/* Banner opcional */}
       {step === 1 && (
-        <div className="w-full lg:hidden flex justify-center overflow-hidden h-[100px]">
+        <div className="w-full flex justify-center overflow-hidden h-[90px] lg:h-[150px]">
           <img
-            src="/autogestion_turnos_hu/public/images/second_banner.jpg"
+            src="/autogestion_turnos_hu/public/images/second_banner.png"
             alt="logo"
             className="object-cover w-full"
           />

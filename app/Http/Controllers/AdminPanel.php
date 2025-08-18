@@ -35,6 +35,13 @@ class AdminPanel extends Controller
                             ['id' => (int) $item->reference_id]
                         ]
                     ],
+                    // ⬇️ NUEVO: mensajes por especialidad
+                    'specialty_message' => [
+                        'value' => (int) $item->reference_id, // id de la especialidad
+                        'meta'  => [
+                            'message' => data_get($item->payload, 'message'),
+                        ],
+                    ],
                     default => [
                         'value' => $item->reference_id,
                     ],

@@ -21,6 +21,10 @@ import {
   UserRound,
   UserCog,
   Loader2,
+  AlertTriangle,
+  MessageSquareText,
+  Info,
+  ImageUp,
 } from "lucide-react"
 import {
   Command,
@@ -35,6 +39,7 @@ import {
   PopoverTrigger,
 } from "shadcn/components/ui/popover"
 import { Check, ChevronsUpDown, LogOut } from "lucide-react"
+import { Label } from "@radix-ui/react-label";
 
 
 export default function AdminPanel({ config, user_role, user_role_name }: { config: Record<string, any[]>, user_role: number, user_role_name: string }) {
@@ -55,6 +60,9 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
   const [enabledPlans, setEnabledPlans] = useState<{ [healthInsuranceId: number]: number[] }>({})
   const [activeDoctorConfigs, setActiveDoctorConfigs] = useState([]);
   const [activePlanConfigs, setActivePlanConfigs] = useState([]);
+  const [specialtyMessages, setSpecialtyMessages] = useState<Record<number, string>>({});
+
+
 
 
   /*useEffect(() => {
@@ -175,6 +183,17 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
 
     loadData()
   }, [])
+
+  useEffect(() => {
+    // Si en "config" ya tenés specialty_message
+    const initial: Record<number, string> = {};
+    (config?.specialty_message ?? []).forEach((item: any) => {
+      const sid = Number(item.value ?? item.reference_id ?? item.id);
+      const msg = item.meta?.message ?? item.payload?.message ?? '';
+      if (sid) initial[sid] = msg;
+    });
+    setSpecialtyMessages(initial);
+  }, []);
 
 
 
@@ -370,6 +389,8 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
           })),
         }))
 
+
+
       // --- PLANES (igual que antes) ---
       let selectedPlans = { ...enabledPlans }
       Object.entries(activePlanConfigs || {}).forEach(([insuranceId, plans]) => {
@@ -381,6 +402,15 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
           }
         })
       })
+
+      const specialtyMessagesPayload = Object.entries(specialtyMessages)
+        .map(([sid, msg]) => ({
+          specialty_id: Number(sid),
+          message: (msg ?? '').trim(),
+        }))
+        // Si querés no mandar vacíos (que el backend no guarde nada para esos):
+        .filter(x => x.message !== '');
+
 
       await fetch(`${import.meta.env.VITE_API_BASE_URL}/sanctum/csrf-cookie`, {
         credentials: "include",
@@ -395,10 +425,12 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
           healthInsurances: selectedHealthInsurances.map(h => h.id),
           specialties: selectedSpecialties, // <-- SOLO las habilitadas
           extraDoctors,                     // <-- NUEVO: doctores de especialidades deshabilitadas
+          specialtyMessages: specialtyMessagesPayload,
           healthInsurancePlans: Object.entries(selectedPlans).map(([healthInsuranceId, plans]) => ({
             health_insurance_id: Number(healthInsuranceId),
             plans: (plans as number[]).map(planId => ({ id: planId })),
-          })),
+          })
+          ),
         }),
       })
 
@@ -712,10 +744,10 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
                                     disabled={!role([1, 4])}
                                   />
                                   <label className="cursor-pointer text-sm text-blue-600 hover:underline">
-                                    Cambiar foto
+                                    <ImageUp className="w-5 h-5" />
                                     <input
                                       type="file"
-                                      accept="image/*"
+                                      accept="image/png, image/jpeg, image/jpg, "
                                       className="hidden"
                                       onChange={e => handleImageUpload(e, specialty.id, doctor.id)}
                                     />
@@ -779,12 +811,37 @@ export default function AdminPanel({ config, user_role, user_role_name }: { conf
 
 
                             </div>
-                          ))
+                          )
+                          )
                         ) : (
                           <p className="text-center text-gray-400">
                             No hay médicos para esta especialidad.
                           </p>
                         )}
+
+                        {/* NUEVO: Mensaje independiente */}
+                        <div className="border border-gray-250 bg-gray-50 rounded-lg p-4">
+                          <h5 className="font-medium text-black mb-3 flex items-center gap-2">
+                            <Info className="w-4 h-4" />
+                            Informacion para pacientes
+                          </h5>
+                          <Label className="text-black text-sm font-semibold ml-1">Mensaje:</Label>
+                          <textarea
+                            className="w-full mt-1 border rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            rows={3}
+                            maxLength={1000}
+                            placeholder="Ej: Esta especialidad atiende con pedido medico..."
+                            value={specialtyMessages[specialty.id] ?? ""}
+                            onChange={e =>
+                              setSpecialtyMessages(prev => ({ ...prev, [specialty.id]: e.target.value }))
+                            }
+                            disabled={!role([1, 4])}
+                          />
+                          <div className="text-right text-xs text-gray-500 mt-1">
+                            {(specialtyMessages[specialty.id]?.length ?? 0)}/1000
+                          </div>
+                        </div>
+
                       </div>
                     )}
                   </div>

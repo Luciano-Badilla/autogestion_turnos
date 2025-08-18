@@ -43,8 +43,7 @@ Route::get('/enabled-plans/{idHealthInsurance?}', [plansController::class, 'getE
 
 Route::post('/admin/sync/update', [AdminConfigurationController::class, 'update']);
 Route::post('/admin/sync/save', [AdminConfigurationController::class, 'store']);
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    Route::get('/admin/sync/load', [AdminConfigurationController::class, 'index']);
 
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });

@@ -97,15 +97,15 @@ export function LandingPage({ onAccessGranted }: LandingPageProps) {
         {/* Captcha y acceso al sistema */}
         <div className="flex w-full justify-center">
           {/* CARD 1 - Consultas */}
-          <Card className="lg:w-[50%]">
+          <Card className="lg:w-[50%] w-[95%]">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-black">
                 <p>Seleccioná el tipo de turno que necesitás</p>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6 -mt-6 flex flex-col gap-6">
-              <div className="flex flex-col gap-3 w-full">
-                <div className={`mb-6 p-6 ${isCaptchaValid ? 'hidden' : ''}`}>
+              <div className="flex flex-col justify-center gap-3 w-full">
+                <div className={`-ml-8 lg:ml-4 mb-6 p-6 ${isCaptchaValid ? 'hidden' : ''}`}>
                   <Label className="text-gray-700 font-medium mb-2 block">Verificación de seguridad</Label>
                   <ReCAPTCHA
                     sitekey={SITE_KEY}
@@ -113,21 +113,21 @@ export function LandingPage({ onAccessGranted }: LandingPageProps) {
                     ref={recaptchaRef}
                   />
                 </div>
-                <Button
+                <button
                   onClick={onAccessGranted}
                   disabled={!isCaptchaValid}
-                  className="w-full bg-[#013765] hover:bg-[#0160b0] text-white text-nowrap py-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full rounded-md font-semibold bg-[#013765] hover:bg-[#0160b0] text-white text-wrap py-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Turnos para consultas con especialistas
-                </Button>
-                <Button
+                </button>
+                <button
                   onClick={openWhatsApp}
                   disabled={!isCaptchaValid}
-                  className="w-full bg-[#1168b1] hover:bg-[#248fea] text-white text-wrap py-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full rounded-md font-semibold bg-[#1168b1] hover:bg-[#248fea] text-white text-wrap py-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
 
                   Turnos para prácticas vía WhatsApp
-                </Button>
+                </button>
 
                 <a href={isCaptchaValid ? "tel:2615644000" : "#"}>
                   <button
@@ -137,7 +137,7 @@ export function LandingPage({ onAccessGranted }: LandingPageProps) {
                     Turnos para prácticas vía telefónica
                   </button>
                 </a>
-                <div className="flex flex-col gap-3 w-full">
+                <div className="flex flex-col gap-3 mt-2 w-full">
                   <div className="bg-[#eff6ff] border rounded-lg p-4">
                     <p className="text-gray-700 text-sm font-bold leading-relaxed">
                       ¡Importante!
