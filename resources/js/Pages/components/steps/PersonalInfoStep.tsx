@@ -12,7 +12,7 @@ import { is } from "date-fns/locale"
 // Función que hace la llamada real a la API Laravel
 const searchPatientByDNI = async (dni: string) => {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 8000); // 8s de timeout
+  const timer = setTimeout(() => controller.abort(), 800000); // 8s de timeout
 
   try {
     const url = `${import.meta.env.VITE_API_BASE_URL}/api/personalInfo/${dni}`;

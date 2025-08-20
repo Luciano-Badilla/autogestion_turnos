@@ -70,7 +70,11 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
                     <p><strong style="color: #6b7280;">Médico:</strong> ${data.doctor}</p>
                     <p><strong style="color: #6b7280;">Fecha:</strong> ${format(new Date(data.date), "PPP", { locale: es })}</p>
                     <p><strong style="color: #6b7280;">Hora:</strong> ${data.time}</p>
-                    <p><strong style="color: #6b7280;">Contacto:</strong> ${data.phone} | <a href="mailto:${data.email}" style="color: #1d4ed8;">${data.email}</a></p>
+                    <p>
+                      <strong style="color: #6b7280;">Contacto:</strong>
+                      ${data.phoneCode ? `${data.phoneCode} ${data.phone}` : data.phone} | 
+                      <a href="mailto:${data.email}" style="color: #1d4ed8;">${data.email}</a>
+                    </p>
 
                     <p style="text-align: center; margin-top: 24px;">
                       <a href="${cancelUrl}" target="_blank"
@@ -166,7 +170,7 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
           <h2 className="text-3xl font-bold text-gray-800 mb-2">¡Turno confirmado!</h2>
           <p className="text-gray-600 max-w-md mx-auto">
             Enviamos el comprobante de turno a (<span className="font-medium text-[#013765]">{data.email}</span>).
-            También recibirás un recordatorio 48 horas antes por WhatsApp al (<span className="font-medium text-[#013765]">{data.phone}</span>).
+            También recibirás un recordatorio 48 horas antes por WhatsApp al (<span className="font-medium text-[#013765]">{data.phoneCode ? `${data.phoneCode}${data.phone}` : data.phone} | {data.email}</span>).
           </p>
         </div>
         <div className="bg-gradient-to-br from-blue-50 to-blue-50 p-8 rounded-2xl max-w-md mx-auto text-left border border-blue-100 shadow-sm">
@@ -214,9 +218,10 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
             <p>
               <span className="text-gray-500">Contacto:</span>{" "}
               <span className="font-medium text-gray-800">
-                {data.phone} | {data.email}
+                {data.phoneCode ? `${data.phoneCode}${data.phone}` : data.phone} | {data.email}
               </span>
             </p>
+
           </div>
         </div>
         <div className="bg-gradient-to-br from-blue-50 to-blue-50 px-8 rounded-2xl max-w-md mx-auto text-left border border-blue-100 shadow-sm">
@@ -288,7 +293,7 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
           </div>
           <div className="space-y-1">
             <p className="text-sm text-[#013765]">Celular</p>
-            <p className="font-medium text-gray-800">{data.phone}</p>
+            <p className="font-medium text-gray-800">{data.phoneCode ? `${data.phoneCode}${data.phone}` : data.phone} | {data.email}</p>
           </div>
         </div>
       </div>

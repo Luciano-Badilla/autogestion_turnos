@@ -201,7 +201,9 @@ export default function AppointmentForm({ healthInsurances, specialties, special
     }
   };
 
-  //console.log(appointmentData);
+
+
+  console.log(appointmentData);
   return (
     <div className="min-h-screen w-full flex flex-col">
       {/* Header */}
