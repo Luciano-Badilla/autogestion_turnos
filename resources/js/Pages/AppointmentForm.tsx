@@ -35,7 +35,8 @@ export default function AppointmentForm({ healthInsurances, specialties, special
     phoneCode: null,
     newHealthInsuranceId: null,
     newPlanId: null,
-    needsUpdateHealthInsurance: false
+    needsUpdateHealthInsurance: false,
+    infoMessage: ""
   })
 
   const totalSteps = 6

@@ -43,8 +43,10 @@ export default function SpecialtyStep({
     setError("");
     if (currentMessage.length > 0) {
       setIsMessageOpen(true); // hay mensaje → abrir modal
+      updateData({ infoMessage: currentMessage })
       return;
     }
+    updateData({ infoMessage: "" })
     onNext(); // no hay mensaje → avanzar normal
   };
 

@@ -34,7 +34,7 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
           <tr>
             <td align="center">
               <table cellpadding="0" cellspacing="0" border="0" width="500"
-                style="background-color: #f0f8ff;np padding: 48px; border: 1px solid #cfe2ff; font-family: 'Montserrat', Arial, sans-serif; text-align: left;">
+                style="background-color: #f0f8ff; padding: 48px; border: 1px solid #cfe2ff; font-family: 'Montserrat', Arial, sans-serif; text-align: left;">
                 
                 <!-- Logo -->
                 <tr>
@@ -54,7 +54,6 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
                         <td style="font-weight: bold; font-size: 18px; color: #1e40af;">Detalles del turno</td>
-                        
                       </tr>
                     </table>
                   </td>
@@ -76,6 +75,11 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
                       <a href="mailto:${data.email}" style="color: #1d4ed8;">${data.email}</a>
                     </p>
 
+                    ${data.infoMessage && data.infoMessage.trim() !== ""
+                ? `<p><strong style="color: #6b7280;">Información:</strong> <span style="color: #111827;">${data.infoMessage}</span></p>`
+                : ""
+              }
+
                     <p style="text-align: center; margin-top: 24px;">
                       <a href="${cancelUrl}" target="_blank"
                         style="background-color: #e64343; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block; font-size: 14px;">
@@ -91,8 +95,8 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
 
         <!-- Fuente Montserrat desde Google Fonts -->
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+      `;
 
-      `
 
       // 1. Verificar si el turno aún está disponible
       const availabilityResponse = await fetch(
@@ -221,6 +225,15 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
                 {data.phoneCode ? `${data.phoneCode}${data.phone}` : data.phone} | {data.email}
               </span>
             </p>
+            {data.infoMessage && data.infoMessage.trim() !== "" && (
+              <p>
+                <span className="text-gray-500">Información:</span>{" "}
+                <span className="font-medium text-gray-800">
+                  {data.infoMessage}
+                </span>
+              </p>
+            )}
+
 
           </div>
         </div>
@@ -287,16 +300,35 @@ export default function SummaryStep({ data, updateData, onBack, setStep }) {
             <p className="text-sm text-[#013765]">DNI</p>
             <p className="font-medium text-gray-800">{data.documentNumber}</p>
           </div>
-          <div className="md:col-span-2 space-y-1">
-            <p className="text-sm text-[#013765]">Email</p>
-            <p className="font-medium text-gray-800">{data.email}</p>
+
+          {/* ---- Bloque compacto: izquierda (Email+Celular) vs derecha (Información) ---- */}
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {/* Columna izquierda: apilamos Email y Celular con flex para que no quede hueco */}
+            <div className="flex flex-col gap-4">
+              <div className="space-y-1">
+                <p className="text-sm text-[#013765]">Email</p>
+                <p className="font-medium text-gray-800">{data.email}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-[#013765]">Celular</p>
+                <p className="font-medium text-gray-800">
+                  {data.phoneCode ? `${data.phoneCode}${data.phone}` : data.phone} | {data.email}
+                </p>
+              </div>
+            </div>
+
+            {/* Columna derecha: Información (solo si hay mensaje) */}
+            {data.infoMessage && data.infoMessage.trim() !== "" && (
+              <div className="space-y-1">
+                <p className="text-sm text-[#013765]">Información</p>
+                <p className="font-medium text-gray-800">{data.infoMessage}</p>
+              </div>
+            )}
           </div>
-          <div className="space-y-1">
-            <p className="text-sm text-[#013765]">Celular</p>
-            <p className="font-medium text-gray-800">{data.phoneCode ? `${data.phoneCode}${data.phone}` : data.phone} | {data.email}</p>
-          </div>
+          {/* --------------------------------------------------------------------------- */}
         </div>
       </div>
+
 
       {error && (
         <div className="bg-red-50 border border-red-200 p-6 rounded-xl shadow-md text-center space-y-4 animate-fade-in">

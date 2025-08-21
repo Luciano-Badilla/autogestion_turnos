@@ -15,19 +15,34 @@ export default function CancelSuccessful({ datos, onCancel, onConfirmed }) {
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
     <tr>
       <td align="center">
-        <table cellpadding="0" cellspacing="0" border="0" width="500" style="background-color: #fef2f2; border-radius: 12px; padding: 24px; border: 1px solid #fecaca; font-family: Arial, sans-serif; text-align: left;">
+        <table cellpadding="0" cellspacing="0" border="0" width="500"
+          style="background-color: #fef2f2; padding: 48px; border: 1px solid #fecaca; font-family: 'Montserrat', Arial, sans-serif; text-align: left;">
+
+          <!-- Logo -->
+          <tr>
+            <td align="center" style="padding-bottom: 16px;">
+              <img src="https://i.imgur.com/Z3HOZfr.png" alt="Logo" style="max-height: 90px;" />
+            </td>
+          </tr>
+
+          <!-- Línea separadora -->
+          <tr>
+            <td style="border-top: 5px solid #fecaca; padding-top: 16px; padding-bottom: 16px; border-radius: 100px;"></td>
+          </tr>
+
+          <!-- Título y X -->
           <tr>
             <td style="padding-bottom: 16px;">
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="font-weight: bold; font-size: 18px; color: #b91c1c;">Turno cancelado</td>
-                  <td align="right">
-                    <div style="background: #ffffff; border-radius: 9999px; padding: 4px;">❌</div>
-                  </td>
+                  
                 </tr>
               </table>
             </td>
           </tr>
+
+          <!-- Contenido -->
           <tr>
             <td style="font-size: 14px; color: #374151;">
               <p><strong style="color: #6b7280;">Paciente:</strong> ${datos.nombre} ${datos.apellido}</p>
@@ -37,19 +52,25 @@ export default function CancelSuccessful({ datos, onCancel, onConfirmed }) {
               <p><strong style="color: #6b7280;">Médico:</strong> ${datos.medico}</p>
               <p><strong style="color: #6b7280;">Fecha:</strong> ${format(new Date(datos.fecha), "PPP", { locale: es })}</p>
               <p><strong style="color: #6b7280;">Hora:</strong> ${datos.hora}</p>
-              <p><strong style="color: #6b7280;">Contacto:</strong> ${datos.telefono} | <a href="mailto:${datos.email}" style="color: #1d4ed8;">${datos.email}</a></p>
+              <p>
+                <strong style="color: #6b7280;">Contacto:</strong>
+                ${datos.telefono} | <a href="mailto:${datos.email}" style="color: #1d4ed8;">${datos.email}</a>
+              </p>
 
               <p style="margin-top: 24px; color: #991b1b; font-weight: bold; text-align: center;">
                 Este turno ha sido cancelado correctamente.
               </p>
-
             </td>
           </tr>
         </table>
       </td>
     </tr>
   </table>
-`
+
+  <!-- Fuente Montserrat desde Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+`;
+
 
 
   // función para confirmar la cancelación

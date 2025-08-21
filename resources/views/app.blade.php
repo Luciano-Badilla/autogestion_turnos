@@ -6,7 +6,7 @@
     <title>Hospital Universitario - Autogestion de turnos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/autogestion_turnos_hu/public/images/hu_favicon_new.png" type="image/x-icon" />
+    <link rel="icon" href="http://172.22.118.101:81/proyectsImages/favicon_color.png" type="image/x-icon" />
     
 
 
